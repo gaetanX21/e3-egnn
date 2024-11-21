@@ -1,6 +1,11 @@
+import torch
+import torch_geometric
 from torch_geometric.datasets import QM9
 import torch_geometric.transforms as T
+from torch_geometric.loader import DataLoader
+from torch_geometric.data import Data, Batch
 
+DATALOADER_BATCH_SIZE = 32
 
 class RemoveFields(object):
     """
@@ -39,3 +44,17 @@ def load_qm9(filepath="../datasets/"):
     mean, std = qm9.data.y.mean(dim=0), qm9.data.y.std(dim=0)
     qm9.data.y = (qm9.data.y - mean) / std
     return qm9
+
+
+def split(dataset, train_ratio=0.8):
+    random_idx = torch.randperm(len(dataset))
+    n_train = int(len(dataset) * train_ratio)
+    n_temp = len(dataset) - n_train
+    n_val = n_temp // 2
+    train_dataset = dataset[random_idx[:n_train]]
+    val_dataset = dataset[random_idx[n_train:n_train+n_val]]
+    test_dataset = dataset[random_idx[n_train+n_val:]]
+    train_loader = DataLoader(train_dataset, batch_size=DATALOADER_BATCH_SIZE, shuffle=False)
+    val_loader = DataLoader(val_dataset, batch_size=DATALOADER_BATCH_SIZE, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=DATALOADER_BATCH_SIZE, shuffle=False)
+    return train_dataset, val_dataset, test_dataset
