@@ -73,7 +73,6 @@ def rot_trans_invariance_unit_test(module, dataloader):
     else: # model
         out_1 = module(data)
         
-
     Q = random_orthogonal_matrix(dim=3)
     t = torch.rand(3)
     data.pos = torch.matmul(data.pos, Q) + t
@@ -88,13 +87,16 @@ def rot_trans_invariance_unit_test(module, dataloader):
     return torch.allclose(out_1, out_2, atol=1e-4)
 
 
-def rot_trans_equivariance_unit_test(module, dataloader):
+def rot_trans_equivariance_unit_test(module, dataloader, use_edge_attr):
     """Unit test for checking whether a module (GNN layer) is 
     rotation and translation equivariant.
     """
     data = next(iter(dataloader))
 
-    out_1, pos_1 = module(data.x, data.pos, data.edge_index, data.edge_attr)
+    if use_edge_attr:
+        out_1, pos_1 = module(data.x, data.pos, data.edge_index, data.edge_attr)
+    else:
+        out_1, pos_1 = module(data.x, data.pos, data.edge_index)
 
     Q = random_orthogonal_matrix(dim=3)
     t = torch.rand(3)
@@ -102,7 +104,10 @@ def rot_trans_equivariance_unit_test(module, dataloader):
 
 
     # Forward pass on rotated + translated example
-    out_2, pos_2 = module(data.x, data.pos, data.edge_index, data.edge_attr)
+    if use_edge_attr:
+        out_2, pos_2 = module(data.x, data.pos, data.edge_index, data.edge_attr)
+    else:
+        out_2, pos_2 = module(data.x, data.pos, data.edge_index)
     
     # Check whether output varies after applying transformations
     pos_1 = torch.matmul(pos_1, Q) + t

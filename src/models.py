@@ -7,21 +7,18 @@ from torch_geometric.utils import scatter
 
 class LinReg(nn.Module):
     """Baseline linear regression model for graph property prediction"""
-    def __init__(self, atom_features=11, hidden_dim=64, out_dim=1):
+    def __init__(self, atom_features=11, out_dim=1):
         super().__init__()
-        self.lin_in = Linear(atom_features+3, hidden_dim)
-        self.lin_out = Linear(hidden_dim, out_dim)
+        self.lin = Linear(atom_features+3, out_dim)
         self.pool = global_mean_pool
-
 
     def forward(self, data):       
         inputs = torch.cat([data.x, data.pos], dim=-1)
-        inputs = self.lin_in(inputs)
-        inputs_graph = self.pool(inputs, data.batch) # (n, d) -> (batch_size, d)
-        out = self.lin_out(inputs_graph) # (batch_size, d) -> (batch_size, 1)
+        inputs = self.lin(inputs)
+        out = self.pool(inputs, data.batch) # (n, d) -> (batch_size, d)
         return out.view(-1)
     
-    
+
 class MLP(nn.Module):
     """Baseline MLP model for graph property prediction"""
     def __init__(self, atom_features=11, hidden_dim=64, out_dim=1):
