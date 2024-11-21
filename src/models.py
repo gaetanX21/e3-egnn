@@ -21,6 +21,7 @@ class LinReg(nn.Module):
         out = self.lin_out(inputs_graph) # (batch_size, d) -> (batch_size, 1)
         return out.view(-1)
     
+    
 class MLP(nn.Module):
     """Baseline MLP model for graph property prediction"""
     def __init__(self, atom_features=11, hidden_dim=64, out_dim=1):
