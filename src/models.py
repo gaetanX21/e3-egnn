@@ -20,7 +20,7 @@ class LinReg(nn.Module):
 
 
 class MPNNLayer(MessagePassing):
-    def __init__(self, emb_dim=64, edge_dim=4, aggr='add'):
+    def __init__(self, emb_dim, edge_dim, aggr='add'):
         """Message Passing Neural Network Layer.
 
         Args:
@@ -147,7 +147,7 @@ class E3EGNN(nn.Module):
     """
     E(3) Equivariant Graph Neural Network (EGNN).
     """
-    def __init__(self, atom_features, num_layers=4, aggr='add'):
+    def __init__(self, atom_features=11, num_layers=4, aggr='add'):
         super().__init__()
         self.convs = nn.ModuleList()
         for layer in range(num_layers):
