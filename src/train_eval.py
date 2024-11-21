@@ -3,8 +3,6 @@ import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
 
-
-
 def train_model(model, train_loader, val_loader, optimizer, device, epochs):
     model.train()
     train_losses, val_losses = [], []

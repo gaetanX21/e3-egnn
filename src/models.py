@@ -20,6 +20,27 @@ class LinReg(nn.Module):
         inputs_graph = self.pool(inputs, data.batch) # (n, d) -> (batch_size, d)
         out = self.lin_out(inputs_graph) # (batch_size, d) -> (batch_size, 1)
         return out.view(-1)
+    
+class MLP(nn.Module):
+    """Baseline MLP model for graph property prediction"""
+    def __init__(self, atom_features=11, hidden_dim=64, out_dim=1):
+        super().__init__()
+        self.lin_in = Linear(atom_features+3, hidden_dim)
+        self.mlp = Sequential(
+            Linear(hidden_dim, hidden_dim), ReLU(),
+            Linear(hidden_dim, hidden_dim), ReLU(),
+            Linear(hidden_dim, hidden_dim), ReLU(),
+        )
+        self.lin_out = Linear(hidden_dim, out_dim)
+        self.pool = global_mean_pool
+
+    def forward(self, data):
+        inputs = torch.cat([data.x, data.pos], dim=-1)
+        inputs = self.lin_in(inputs)
+        inputs = self.mlp(inputs)
+        inputs_graph = self.pool(inputs, data.batch)
+        out = self.lin_out(inputs_graph)
+        return out.view(-1)
 
 
 class MPNNLayer(MessagePassing):
