@@ -37,7 +37,7 @@ def evaluate_model(model, loader, device):
     return loss
 
 
-def run_experiment(model, model_name, train_loader, val_loader, device, n_epochs):
+def run_experiment(model, model_name, train_loader, val_loader, device, n_epochs, lr=0.001):
     """
     Run a training experiment for a given model.
     """
@@ -53,7 +53,11 @@ def run_experiment(model, model_name, train_loader, val_loader, device, n_epochs
     model = model.to(device)
 
     # Adam optimizer with LR 1e-3
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+    # LR scheduler which decays LR when validation metric doesn't improve
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode='min', factor=0.9, patience=5, min_lr=0.00001)
     
     print('\nTraining started.')
     train_losses, val_losses = train_model(model, train_loader, val_loader, optimizer, device, n_epochs)
