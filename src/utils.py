@@ -163,3 +163,24 @@ def smi2conf(smiles):
 def visualize3d(mol):
     """Visualize 3D molecule"""
     return MolTo3DView(smi2conf(Chem.MolToSmiles(to_rdkit(mol))))
+
+def get_chiral_molecules(dataset):
+    """
+    Identify chiral molecules in the QM9 dataset.
+    
+    Args:
+        dataset: PyTorch Geometric QM9 dataset.
+        
+    Returns:
+        A list of chiral SMILES strings.
+    """
+    chiral_smiles = []
+    for data in dataset:
+        smiles = data.smiles
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is not None:
+            # Find chiral centers
+            chiral_centers = Chem.FindMolChiralCenters(mol, includeUnassigned=True)
+            if chiral_centers:
+                chiral_smiles.append(smiles)
+    return chiral_smiles
