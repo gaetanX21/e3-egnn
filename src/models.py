@@ -15,7 +15,7 @@ class LinReg(nn.Module):
     def forward(self, data):       
         inputs = torch.cat([data.x, data.pos], dim=-1)
         inputs = self.lin(inputs)
-        out = self.pool(inputs, data.batch) # (n, d) -> (batch_size, d)
+        out = self.pool(inputs, data.batch) # (n, d) -> (batch_size, d) [because PyG concatenates all the graphs into one big graph]
         return out.view(-1)
     
 

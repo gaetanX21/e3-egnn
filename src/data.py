@@ -59,4 +59,4 @@ def split(dataset, train_ratio=0.8):
     train_loader = DataLoader(train_dataset, batch_size=DATALOADER_BATCH_SIZE, shuffle=False)
     val_loader = DataLoader(val_dataset, batch_size=DATALOADER_BATCH_SIZE, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=DATALOADER_BATCH_SIZE, shuffle=False)
-    return train_dataset, val_dataset, test_dataset
+    return train_loader, val_loader, test_loader
