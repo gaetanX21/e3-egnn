@@ -283,14 +283,19 @@ class E3EGNN(nn.Module):
         self.convs = nn.ModuleList()
         for layer in range(num_layers):
             self.convs.append(E3EGCL(node_dim=node_dim, aggr=aggr))
+        self.pool = global_mean_pool
+        self.lin_pred = nn.Linear(node_dim, 1)
 
     def forward(self, data):
-        h = data.h
-        x = data.x
+        h = data.x
+        x = data.pos
         for conv in self.convs:
             h_upd, x_upd = conv(h, x, data.edge_index)
             h = h + h_upd
             x = x_upd
         x_cog = x.mean(dim=0, keepdim=True)
         x = x - x_cog # remove center of gravity cf. Section 3.2 in paper
-        return torch.cat([x, h], dim=-1)
+        h_graph = self.pool(h, data.batch) # (n, d) -> (batch_size, d)
+        print(h_graph.shape)
+        out = self.lin_pred(h_graph)
+        return out.view(-1)
