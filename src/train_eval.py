@@ -44,7 +44,7 @@ def run_experiment(model, train_loader, val_loader, device, n_epochs, lr=0.001):
     Run a training experiment for a given model.
     """
 
-    print(f"Running experiment for {model.__class__.__name__}, training on {len(train_loader)} samples for {n_epochs} epochs.")
+    print(f"Running experiment for {model.__class__.__name__}, training on {len(train_loader.dataset)} samples for {n_epochs} epochs.")
     
     print("\nModel architecture:")
     print(model)
