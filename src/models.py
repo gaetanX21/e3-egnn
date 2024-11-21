@@ -7,9 +7,9 @@ from torch_geometric.utils import scatter
 
 class LinReg(nn.Module):
     """Baseline linear regression model for graph property prediction"""
-    def __init__(self, atom_features=11, out_dim=1):
+    def __init__(self, node_dim, out_dim=1):
         super().__init__()
-        self.lin = Linear(atom_features+3, out_dim)
+        self.lin = Linear(node_dim, out_dim)
         self.pool = global_mean_pool
 
     def forward(self, data):       
@@ -296,6 +296,5 @@ class E3EGNN(nn.Module):
         x_cog = x.mean(dim=0, keepdim=True)
         x = x - x_cog # remove center of gravity cf. Section 3.2 in paper
         h_graph = self.pool(h, data.batch) # (n, d) -> (batch_size, d)
-        print(h_graph.shape)
         out = self.lin_pred(h_graph)
         return out.view(-1)
