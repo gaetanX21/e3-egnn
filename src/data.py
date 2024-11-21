@@ -58,3 +58,24 @@ def split(dataset, train_ratio=0.8):
     val_loader = DataLoader(val_dataset, batch_size=DATALOADER_BATCH_SIZE, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=DATALOADER_BATCH_SIZE, shuffle=False)
     return train_dataset, val_dataset, test_dataset
+
+def get_chiral_molecules(dataset):
+    """
+    Identify chiral molecules in the QM9 dataset.
+    
+    Args:
+        dataset: PyTorch Geometric QM9 dataset.
+        
+    Returns:
+        A list of chiral SMILES strings.
+    """
+    chiral_smiles = []
+    for data in dataset:
+        smiles = data.smiles
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is not None:
+            # Find chiral centers
+            chiral_centers = Chem.FindMolChiralCenters(mol, includeUnassigned=True)
+            if chiral_centers:
+                chiral_smiles.append(smiles)
+    return chiral_smiles
