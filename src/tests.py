@@ -117,6 +117,9 @@ def full_test(model, dataloader, use_edge_attr):
     """Run all tests on a model (GNN model) and looks at its layer properties too.
     """
     # Create a dummy dataset
+    print('\n' + '-'*42)
+    print(f'Testing model {model.__class__.__name__}')
+
     data = next(iter(dataloader))[0]
 
     layer = model.convs[0]
@@ -132,3 +135,5 @@ def full_test(model, dataloader, use_edge_attr):
     model_rot_trans_invar = rot_trans_invariance_unit_test(model, dataloader)
     print(f"Model permutation invariance: {model_perm_invar}")
     print(f"Model rotation and translation invariance: {model_rot_trans_invar}")
+
+    print('-'*42 + '\n')

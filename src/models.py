@@ -7,7 +7,7 @@ from torch_geometric.utils import scatter
 
 class LinReg(nn.Module):
     """Baseline linear regression model for graph property prediction"""
-    def __init__(self, atom_features, out_dim=1):
+    def __init__(self, atom_features=11, out_dim=1):
         super().__init__()
         self.lin = Linear(atom_features+3, out_dim)
         self.pool = global_mean_pool
@@ -160,6 +160,94 @@ class E3EGNN(nn.Module):
         x = data.pos
         for conv in self.convs:
             h_upd, x_upd = conv(h, x, data.edge_index)
+            h = h + h_upd
+            x = x_upd
+        x_cog = x.mean(dim=0, keepdim=True)
+        x = x - x_cog # remove center of gravity cf. Section 3.2 in paper
+        h_graph = self.pool(h, data.batch) # (n, d) -> (batch_size, d)
+        out = self.lin_pred(h_graph)
+        return out.view(-1)
+    
+
+
+
+# now with edge features
+class E3EGCL_edge(MessagePassing):
+    """
+    E(3) Equivariant Graph Convolution Layer (EGCL) + WITH EDGE FEATURES
+    """
+    def __init__(self, atom_features, edge_dim, aggr='add'):
+        super().__init__(aggr=aggr)
+        
+        self.mlp_msg_h = nn.Sequential(
+            nn.Linear(atom_features*2+1+edge_dim, atom_features),
+            nn.SiLU(),
+            nn.Linear(atom_features, atom_features),
+            nn.SiLU()
+        )
+
+        self.mlp_attn_msg_h = nn.Sequential(
+            nn.Linear(atom_features, 1),
+            nn.Sigmoid()
+        )
+
+        self.mlp_upd_h = nn.Sequential(
+            nn.Linear(atom_features*2, atom_features),
+            nn.SiLU(),
+            nn.Linear(atom_features, atom_features)
+        )
+
+        self.mlp_msg_x = nn.Sequential(
+            nn.Linear(atom_features*2+1+edge_dim, atom_features),
+            nn.SiLU(),
+            nn.Linear(atom_features, atom_features),
+            nn.SiLU(),
+            nn.Linear(atom_features, 1)
+        )
+
+    def forward(self, h, x, edge_index, edge_attr):
+        out = self.propagate(edge_index, h=h, x=x, edge_attr=edge_attr)
+        return out
+    
+    def message(self, h_i, h_j, x_i, x_j, edge_attr):
+        d_ij = torch.linalg.norm(x_j-x_i, dim=-1, keepdim=True)
+        m_ij = self.mlp_msg_h(torch.cat([h_i, h_j, d_ij**2, edge_attr], dim=-1))
+        attn = self.mlp_attn_msg_h(m_ij)
+        msg_h = attn * m_ij
+        msg_x = (x_i-x_j)/(d_ij+1) * self.mlp_msg_x(torch.cat([h_i, h_j, d_ij**2, edge_attr], dim=-1))
+        return msg_h, msg_x
+    
+    def aggregate(self, inputs, index):
+        inputs_h, inputs_x = inputs
+        reduce = 'sum' if self.aggr=='add' else self.aggr # 'add' aggregation is called 'sum' in scatter
+        agg_h = scatter(inputs_h, index, dim=self.node_dim, reduce=reduce)
+        agg_x = scatter(inputs_x, index, dim=self.node_dim, reduce=reduce)
+        return agg_h, agg_x
+    
+    def update(self, aggr_out, h, x):
+        agg_h, agg_x = aggr_out
+        out_h = self.mlp_upd_h(torch.cat([h, agg_h], dim=-1))
+        out_x = x + agg_x
+        return out_h, out_x
+
+
+class E3EGNN_edge(nn.Module):
+    """
+    E(3) Equivariant Graph Neural Network (EGNN) + WITH EDGE FEATURES
+    """
+    def __init__(self, atom_features=11, edge_dim=4, num_layers=4, aggr='add'):
+        super().__init__()
+        self.convs = nn.ModuleList()
+        for layer in range(num_layers):
+            self.convs.append(E3EGCL_edge(atom_features=atom_features, aggr=aggr, edge_dim=edge_dim))
+        self.pool = global_mean_pool
+        self.lin_pred = nn.Linear(atom_features, 1)
+
+    def forward(self, data):
+        h = data.x
+        x = data.pos
+        for conv in self.convs:
+            h_upd, x_upd = conv(h, x, data.edge_index, data.edge_attr)
             h = h + h_upd
             x = x_upd
         x_cog = x.mean(dim=0, keepdim=True)
