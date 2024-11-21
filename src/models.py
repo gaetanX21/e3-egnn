@@ -284,7 +284,7 @@ class E3EGNN(nn.Module):
         for layer in range(num_layers):
             self.convs.append(E3EGCL(node_dim=node_dim, aggr=aggr))
 
-    def forward(self, data, t):
+    def forward(self, data):
         h = data.h
         x = data.x
         for conv in self.convs:
