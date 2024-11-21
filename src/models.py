@@ -7,9 +7,9 @@ from torch_geometric.utils import scatter
 
 class LinReg(nn.Module):
     """Baseline linear regression model for graph property prediction"""
-    def __init__(self, node_dim, out_dim=1):
+    def __init__(self, atom_features, out_dim=1):
         super().__init__()
-        self.lin = Linear(node_dim, out_dim)
+        self.lin = Linear(atom_features+3, out_dim)
         self.pool = global_mean_pool
 
     def forward(self, data):       
@@ -165,7 +165,7 @@ class MPNNLayer(MessagePassing):
 
 
 class MPNN(nn.Module):
-    def __init__(self, num_layers=4, emb_dim=64, in_dim=11, edge_dim=4, out_dim=1):
+    def __init__(self, num_layers=4, emb_dim=64, atom_features=11, edge_dim=4, out_dim=1):
         """Message Passing Neural Network model for graph property prediction
 
         Args:
@@ -179,7 +179,7 @@ class MPNN(nn.Module):
         
         # Linear projection for initial node features
         # dim: d_n -> d
-        self.lin_in = Linear(in_dim, emb_dim)
+        self.lin_in = Linear(atom_features, emb_dim)
         
         # Stack of MPNN layers
         self.convs = torch.nn.ModuleList()
@@ -203,15 +203,10 @@ class MPNN(nn.Module):
             out: (batch_size, out_dim) - prediction for each graph
         """
         h = self.lin_in(data.x) # (n, d_n) -> (n, d)
-        
         for conv in self.convs:
             h = h + conv(h, data.edge_index, data.edge_attr) # (n, d) -> (n, d)
-            # Note that we add a residual connection after each MPNN layer
-
         h_graph = self.pool(h, data.batch) # (n, d) -> (batch_size, d)
-
         out = self.lin_pred(h_graph) # (batch_size, d) -> (batch_size, 1)
-
         return out.view(-1)
     
 
@@ -219,33 +214,33 @@ class E3EGCL(MessagePassing):
     """
     E(3) Equivariant Graph Convolution Layer (EGCL)
     """
-    def __init__(self, node_dim, aggr='add'):
+    def __init__(self, atom_features, aggr='add'):
         super().__init__(aggr=aggr)
         
         self.mlp_msg_h = nn.Sequential(
-            nn.Linear(node_dim*2+1, node_dim),
+            nn.Linear(atom_features*2+1, atom_features),
             nn.SiLU(),
-            nn.Linear(node_dim, node_dim),
+            nn.Linear(atom_features, atom_features),
             nn.SiLU()
         )
 
         self.mlp_attn_msg_h = nn.Sequential(
-            nn.Linear(node_dim, 1),
+            nn.Linear(atom_features, 1),
             nn.Sigmoid()
         )
 
         self.mlp_upd_h = nn.Sequential(
-            nn.Linear(node_dim*2, node_dim),
+            nn.Linear(atom_features*2, atom_features),
             nn.SiLU(),
-            nn.Linear(node_dim, node_dim)
+            nn.Linear(atom_features, atom_features)
         )
 
         self.mlp_msg_x = nn.Sequential(
-            nn.Linear(node_dim*2+1, node_dim),
+            nn.Linear(atom_features*2+1, atom_features),
             nn.SiLU(),
-            nn.Linear(node_dim, node_dim),
+            nn.Linear(atom_features, atom_features),
             nn.SiLU(),
-            nn.Linear(node_dim, 1)
+            nn.Linear(atom_features, 1)
         )
 
     def forward(self, h, x, edge_index):
@@ -278,13 +273,13 @@ class E3EGNN(nn.Module):
     """
     E(3) Equivariant Graph Neural Network (EGNN).
     """
-    def __init__(self, node_dim, num_layers=4, aggr='add'):
+    def __init__(self, atom_features, num_layers=4, aggr='add'):
         super().__init__()
         self.convs = nn.ModuleList()
         for layer in range(num_layers):
-            self.convs.append(E3EGCL(node_dim=node_dim, aggr=aggr))
+            self.convs.append(E3EGCL(atom_features=atom_features, aggr=aggr))
         self.pool = global_mean_pool
-        self.lin_pred = nn.Linear(node_dim, 1)
+        self.lin_pred = nn.Linear(atom_features, 1)
 
     def forward(self, data):
         h = data.x
