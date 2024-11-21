@@ -70,29 +70,18 @@ def random_orthogonal_matrix(dim=3):
 
 
 def rot_trans_invariance_unit_test(module, dataloader):
-    """Unit test for checking whether a module (GNN model/layer) is 
+    """Unit test for checking whether a module (GNN model) is 
     rotation and translation invariant.
     """
     data = next(iter(dataloader))[0]
 
-    # Forward pass on original example
-    # Note: We have written a conditional forward pass so that the same unit
-    #       test can be used for both the GNN model as well as the layer.
-    #       The functionality for layers will be useful subsequently. 
-    if isinstance(module, MessagePassing): # layer
-       out_1 = module(data.x, data.pos, data.edge_index, data.edge_attr)
-    else: # model
-        out_1 = module(data)
+    out_1 = module(data)
         
     Q = random_orthogonal_matrix(dim=3)
     t = torch.rand(3)
     data.pos = torch.matmul(data.pos, Q) + t
 
-    # Forward pass on rotated + translated example
-    if isinstance(module, MessagePassing):
-        out_2 = module(data.x, data.pos, data.edge_index, data.edge_attr)
-    else:
-        out_2 = module(data)
+    out_2 = module(data)
 
     # Check whether output varies after applying transformations
     return torch.allclose(out_1, out_2, atol=1e-4)
@@ -112,7 +101,6 @@ def rot_trans_equivariance_unit_test(module, dataloader, use_edge_attr):
     Q = random_orthogonal_matrix(dim=3)
     t = torch.rand(3)
     data.pos = torch.matmul(data.pos, Q) + t
-
 
     # Forward pass on rotated + translated example
     if use_edge_attr:
