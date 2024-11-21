@@ -3,10 +3,11 @@ import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
 
-def train_model(model, train_loader, val_loader, optimizer, device, epochs):
+def train_model(model, train_loader, val_loader, optimizer, device, epochs, scheduler):
     model.train()
     train_losses, val_losses = [], []
     for epoch in tqdm(range(epochs)):
+        lr = scheduler.optimizer.param_groups[0]['lr']
         total_loss = 0
         for data in train_loader:
             data = data.to(device)  # Move to GPU if available
@@ -18,6 +19,7 @@ def train_model(model, train_loader, val_loader, optimizer, device, epochs):
             total_loss += loss.item()
         train_loss = total_loss / len(train_loader)
         val_loss = evaluate_model(model, val_loader, device)
+        scheduler.step(val_loss)
         train_losses.append(train_loss)
         val_losses.append(val_loss)
         # print(f"Epoch {epoch+1}/{epochs}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
@@ -60,6 +62,6 @@ def run_experiment(model, model_name, train_loader, val_loader, device, n_epochs
         optimizer, mode='min', factor=0.9, patience=5, min_lr=0.00001)
     
     print('\nTraining started.')
-    train_losses, val_losses = train_model(model, train_loader, val_loader, optimizer, device, n_epochs)
+    train_losses, val_losses = train_model(model, train_loader, val_loader, optimizer, device, n_epochs, scheduler)
     print('Training finished.')
     return train_losses, val_losses
