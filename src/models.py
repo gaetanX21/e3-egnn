@@ -5,6 +5,7 @@ from torch.nn import Sequential, Linear, BatchNorm1d, ReLU
 from torch_geometric.utils import scatter
 
 
+# Linear regression model (baseline)
 class LinReg(nn.Module):
     """Baseline linear regression model for graph property prediction"""
     def __init__(self, atom_features=11, out_dim=1):
@@ -19,6 +20,7 @@ class LinReg(nn.Module):
         return out.view(-1)
 
 
+# Message Passing Neural Network (MPNN)
 class MPNNLayer(MessagePassing):
     def __init__(self, emb_dim, edge_dim, aggr='add'):
         """Message Passing Neural Network Layer.
@@ -84,6 +86,7 @@ class MPNN(nn.Module):
         return out.view(-1)
 
 
+# E(3) Equivariant Graph Neural Network (EGNN) (without edge features)
 class E3EGCL(MessagePassing):
     """
     E(3) Equivariant Graph Convolution Layer (EGCL)
@@ -169,9 +172,7 @@ class E3EGNN(nn.Module):
         return out.view(-1)
     
 
-
-
-# now with edge features
+# E(3) Equivariant Graph Neural Network (EGNN) (with edge features)
 class E3EGCL_edge(MessagePassing):
     """
     E(3) Equivariant Graph Convolution Layer (EGCL) + WITH EDGE FEATURES
