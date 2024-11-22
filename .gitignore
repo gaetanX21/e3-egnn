@@ -1,4 +1,6 @@
 datasets/
 weights/
 src/wandb/
+wandb/
 *.ipynb
+*.pyc

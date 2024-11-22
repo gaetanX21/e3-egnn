@@ -31,7 +31,6 @@ class MPNNLayer(MessagePassing):
             aggr: (str) - aggregation function `\oplus` (sum/mean/max)
         """
         super().__init__(aggr=aggr)
-
         self.emb_dim = emb_dim
         self.edge_dim = edge_dim
 
@@ -93,6 +92,7 @@ class E3EGCL(MessagePassing):
     """
     def __init__(self, atom_features, aggr='add'):
         super().__init__(aggr=aggr)
+        self.atom_features = atom_features
         
         self.mlp_msg_h = nn.Sequential(
             nn.Linear(atom_features*2+1, atom_features),
@@ -144,6 +144,9 @@ class E3EGCL(MessagePassing):
         out_h = self.mlp_upd_h(torch.cat([h, agg_h], dim=-1))
         out_x = x + agg_x
         return out_h, out_x
+    
+    def __repr__(self) -> str:
+        return (f'{self.__class__.__name__}(atom_features={self.atom_features}, aggr={self.aggr})')
 
 
 class E3EGNN(nn.Module):
@@ -177,6 +180,8 @@ class E3EGCL_edge(MessagePassing):
     """
     def __init__(self, atom_features, edge_dim, aggr='add'):
         super().__init__(aggr=aggr)
+        self.atom_features = atom_features
+        self.edge_dim = edge_dim
         
         self.mlp_msg_h = nn.Sequential(
             nn.Linear(atom_features*2+1+edge_dim, atom_features),
@@ -228,6 +233,9 @@ class E3EGCL_edge(MessagePassing):
         out_h = self.mlp_upd_h(torch.cat([h, agg_h], dim=-1))
         out_x = x + agg_x
         return out_h, out_x
+    
+    def __repr__(self) -> str:
+        return (f'{self.__class__.__name__}(atom_features={self.atom_features}, edge_dim={self.edge_dim}, aggr={self.aggr})')
 
 
 class E3EGNN_edge(nn.Module):
