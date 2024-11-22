@@ -1,0 +1,8 @@
+{"time":"2024-11-22T19:00:36.8304704+01:00","level":"INFO","msg":"using version","core version":"0.18.5"}
+{"time":"2024-11-22T19:00:36.8304704+01:00","level":"INFO","msg":"created symlink","path":"c:\\Users\\gecre\\OneDrive\\MVA\\Semestre 1\\GDA\\Molecule\\github samson\\EGGN_Classifier\\src\\wandb\\run-20241122_190036-eknoldxh\\logs\\debug-core.log"}
+{"time":"2024-11-22T19:00:37.0684059+01:00","level":"INFO","msg":"created new stream","id":"eknoldxh"}
+{"time":"2024-11-22T19:00:37.0684059+01:00","level":"INFO","msg":"stream: started","id":"eknoldxh"}
+{"time":"2024-11-22T19:00:37.0684059+01:00","level":"INFO","msg":"sender: started","stream_id":"eknoldxh"}
+{"time":"2024-11-22T19:00:37.0684059+01:00","level":"INFO","msg":"writer: Do: started","stream_id":{"value":"eknoldxh"}}
+{"time":"2024-11-22T19:00:37.0684059+01:00","level":"INFO","msg":"handler: started","stream_id":{"value":"eknoldxh"}}
+{"time":"2024-11-22T19:00:37.3323516+01:00","level":"INFO","msg":"Starting system monitor"}

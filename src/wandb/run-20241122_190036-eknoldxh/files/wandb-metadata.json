@@ -1,0 +1,31 @@
+{
+  "os": "Windows-10-10.0.22631-SP0",
+  "python": "3.11.9",
+  "startedAt": "2024-11-22T18:00:36.821040Z",
+  "program": "c:\\Users\\gecre\\OneDrive\\MVA\\Semestre 1\\GDA\\Molecule\\github samson\\EGGN_Classifier\\src\\mine.ipynb",
+  "git": {
+    "remote": "https://github.com/samsongourevitch/EGGN_Classifier",
+    "commit": "820b32b06d70525f4cf5e778460af3b2c081c400"
+  },
+  "email": "g.ecrepont@gmail.com",
+  "root": "c:\\Users\\gecre\\OneDrive\\MVA\\Semestre 1\\GDA\\Molecule\\github samson\\EGGN_Classifier\\src",
+  "host": "Dell_GE",
+  "username": "gecre",
+  "executable": "C:\\Users\\gecre\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\python.exe",
+  "codePathLocal": "mine.ipynb",
+  "cpu_count": 4,
+  "cpu_count_logical": 8,
+  "disk": {
+    "/": {
+      "total": "491221151744",
+      "used": "326345285632"
+    }
+  },
+  "memory": {
+    "total": "16889540608"
+  },
+  "cpu": {
+    "count": 4,
+    "countLogical": 8
+  }
+}

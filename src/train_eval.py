@@ -2,15 +2,18 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
+import wandb
 
-def train_model(model, train_loader, val_loader, optimizer, device, epochs, scheduler):
+wandb.login()
+
+def train_model(model, train_loader, val_loader, optimizer, device, epochs, scheduler, use_wandb):
     model.train()
     train_losses, val_losses = [], []
     for epoch in tqdm(range(epochs)):
         lr = scheduler.optimizer.param_groups[0]['lr']
         total_loss = 0
         for data in train_loader:
-            data = data.to(device)  # Move to GPU if available
+            data = data.to(device)
             optimizer.zero_grad()
             out = model(data)
             loss = F.mse_loss(out, data.y)
@@ -22,7 +25,8 @@ def train_model(model, train_loader, val_loader, optimizer, device, epochs, sche
         scheduler.step(val_loss)
         train_losses.append(train_loss)
         val_losses.append(val_loss)
-        # print(f"Epoch {epoch+1}/{epochs}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
+        if use_wandb:
+            wandb.log({'train_loss': train_loss, 'val_loss': val_loss, 'lr': lr})
     return train_losses, val_losses
 
 
@@ -39,13 +43,11 @@ def evaluate_model(model, loader, device):
     return loss
 
 
-def run_experiment(model, train_loader, val_loader, device, n_epochs, lr=0.001):
+def run_experiment(model, train_loader, val_loader, device, n_epochs, lr=1e-3, use_wandb=False):
     """
     Run a training experiment for a given model.
     """
-
     print(f"Running experiment for {model.__class__.__name__}, training on {len(train_loader.dataset)} samples for {n_epochs} epochs.")
-    
     print("\nModel architecture:")
     print(model)
     total_param = 0
@@ -54,14 +56,20 @@ def run_experiment(model, train_loader, val_loader, device, n_epochs, lr=0.001):
     print(f'Total parameters: {total_param}')
     model = model.to(device)
 
-    # Adam optimizer with LR 1e-3
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-
-    # LR scheduler which decays LR when validation metric doesn't improve
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', factor=0.9, patience=5, min_lr=0.00001)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.9, patience=5, min_lr=1e-5)
     
+    if use_wandb:
+        wandb.init(
+            project = 'egnn',
+            config = {
+                'model': model.__class__.__name__,
+                'lr': lr,
+                'n_epochs': n_epochs,
+                'total_param': total_param
+            }
+        )
     print('\nTraining started.')
-    train_losses, val_losses = train_model(model, train_loader, val_loader, optimizer, device, n_epochs, scheduler)
+    train_losses, val_losses = train_model(model, train_loader, val_loader, optimizer, device, n_epochs, scheduler, use_wandb)
     print('Training finished.')
     return train_losses, val_losses
