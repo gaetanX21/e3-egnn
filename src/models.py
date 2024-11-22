@@ -165,8 +165,6 @@ class E3EGNN(nn.Module):
             h_upd, x_upd = conv(h, x, data.edge_index)
             h = h + h_upd
             x = x_upd
-        x_cog = x.mean(dim=0, keepdim=True)
-        x = x - x_cog # remove center of gravity cf. Section 3.2 in paper
         h_graph = self.pool(h, data.batch) # (n, d) -> (batch_size, d)
         out = self.lin_pred(h_graph)
         return out.view(-1)
@@ -251,8 +249,6 @@ class E3EGNN_edge(nn.Module):
             h_upd, x_upd = conv(h, x, data.edge_index, data.edge_attr)
             h = h + h_upd
             x = x_upd
-        x_cog = x.mean(dim=0, keepdim=True)
-        x = x - x_cog # remove center of gravity cf. Section 3.2 in paper
         h_graph = self.pool(h, data.batch) # (n, d) -> (batch_size, d)
         out = self.lin_pred(h_graph)
         return out.view(-1)
