@@ -7,7 +7,8 @@ from torch_geometric.data import Data, Batch
 from rdkit import Chem
 import numpy as np
 
-DATALOADER_BATCH_SIZE = 32
+
+DATALOADER_BATCH_SIZE = 64
 
 class RemoveFields(object):
     """
