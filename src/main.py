@@ -12,8 +12,8 @@ def main():
     parser.add_argument("--epochs", type=int, default=100, help="Number of epochs to train the model.")
     parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate for the optimizer.")
     parser.add_argument("--use_wandb", action='store_true', help="Use Weights & Biases for logging.")
-    parser.add_argument("--qm9_dir", type=str, help="Path to the QM9 dataset.")
-    parser.add_argument("--weights_dir", type=str, help="Path to save the model weights.")
+    parser.add_argument("--qm9_dir", type=str, default="datasets/", help="Path to the QM9 dataset.")
+    parser.add_argument("--weights_dir", type=str, default="weights/", help="Path to save the model weights.")
 
     args = parser.parse_args()
 
