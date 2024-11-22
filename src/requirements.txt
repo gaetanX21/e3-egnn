@@ -1,0 +1,10 @@
+matplotlib
+numpy
+py3Dmol
+rdkit
+scipy
+seaborn
+torch
+torch_geometric
+tqdm
+wandb
