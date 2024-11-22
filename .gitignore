@@ -1,3 +1,4 @@
 datasets/
 weights/
+wandb/
 *.ipynb
