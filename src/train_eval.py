@@ -4,7 +4,6 @@ import numpy as np
 from tqdm import tqdm
 import wandb
 
-wandb.login()
 
 def train_model(model, train_loader, val_loader, optimizer, device, epochs, scheduler, use_wandb):
     model.train()

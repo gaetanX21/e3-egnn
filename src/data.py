@@ -9,6 +9,7 @@ import numpy as np
 
 
 DATALOADER_BATCH_SIZE = 64
+MAX_ATOMS = 12
 
 class RemoveFields(object):
     """
@@ -40,10 +41,25 @@ class SetTarget(object):
         return data
     
 
+class MaxAtomsFilter(object):
+    """
+    This transform filters the dataset to only keep molecules that have less than the specified number of atoms.
+    """
+    def __init__(self, max_atoms):
+        self.max_atoms = max_atoms
+
+    def __call__(self, data):
+        if data.x.shape[0] <= self.max_atoms:
+            return True
+        else:
+            return False
+
+
 def load_qm9(filepath="../datasets/"):
     remove_fields = ["z", "smiles", "name", "idx"]
     transform = T.Compose([RemoveFields(remove_fields), SetTarget()])
-    qm9 = QM9(root=filepath, transform=transform)
+    filter = MaxAtomsFilter(MAX_ATOMS)
+    qm9 = QM9(root=filepath, transform=transform, pre_filter=filter)
     mean, std = qm9.data.y.mean(dim=0), qm9.data.y.std(dim=0)
     qm9.data.y = (qm9.data.y - mean) / std
     return qm9

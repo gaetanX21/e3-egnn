@@ -66,7 +66,7 @@ class MPNNLayer(MessagePassing):
 
 
 class MPNN(nn.Module):
-    def __init__(self, num_layers=4, emb_dim=64, atom_features=11, edge_dim=4, out_dim=1):
+    def __init__(self, num_layers=4, emb_dim=11, atom_features=11, edge_dim=4, out_dim=1):
         super().__init__()
         self.lin_in = Linear(atom_features+3, emb_dim)   
         self.convs = torch.nn.ModuleList()
