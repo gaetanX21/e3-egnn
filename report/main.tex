@@ -4,7 +4,12 @@
 \settopmatter{printacmref=false, printccs=false, printfolios=false} % Suppress ACM references
 \renewcommand\footnotetextcopyrightpermission[1]{} % Remove copyright
 \pagestyle{plain} % Plain header and footer
+
+% added
 \usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{array}
+\usepackage{graphicx}  % For resizing the table
 
 % Remove conference information
 \acmConference{}{}{} % Clears conference name, location, and date
@@ -184,10 +189,98 @@ Each sample in the dataset is a graph with several properties:
     \item edge features $\mathcal{E}_\text{type} \in \mathbb{R}^{\text{\#edges}\times 4}$ (one-hot: single, double, triple, aromatic)
 \end{itemize}
 
+The QM9 dataset has 19 regression targets which are various physical properties of the molecules.
+We will focus on the first target which is the dipole moment of the molecule. We chose this target because it is typically geometric so we expect to clearly see the benefits of 
+incorporating E(3)-equivariance in the model.
+We adopt a random split of 80\% training, 10\% validation, and 10\% test.
+Finally, we normalize our regression target to have zero mean and unit variance.
+
+\subsection{Layers}
+
+All GNNs considered follow the same architecture:
+\begin{enumerate}
+    \item Linear layer to embed the atom features (which include the atom positions for MPNN): $(M,\text{nf}) \rightarrow (M, d_\text{embed})$
+    \item Stacked GCL or EGCL layers (depending on the model) with $L$ layers: $(M, d_\text{embed}) \rightarrow (M, d_\text{embed})$
+    \item Global mean pooling to aggregate the node features: $(M, d_\text{embed}) \rightarrow (d_\text{embed})$
+    \item Linear layer to predict the regression target $(d_\text{embed},) \rightarrow (1,)$
+\end{enumerate}
+
+Let's first describe the two types of layers considered.
+
+The GCL layer computes $\mathbf{h}^{t+1} = \text{GCL}(\mathbf{h}^t)$ as follows:
+\begin{enumerate}
+    \item message $\mathbf{m}_{ij} = \phi_\mathbf{h}(\mathbf{h}_i, \mathbf{h}_j, \mathcal{E}_{ij})$
+    \item aggregation $\mathbf{m}_i = \sum_{j\in\mathcal{N}(i)} \mathbf{m}_{ij}$ where $\mathcal{N}(i)$ is the set of neighbors of node $i$
+    \item update $\mathbf{h}_i^{t+1} = \phi_\text{update}(\mathbf{h}^t, \mathbf{m}_i)$
+\end{enumerate}
+
+The EGCL layer computes $\mathbf{h}^{t+1}, \mathbf{x}^{t+1} = \text{EGCL}(\mathbf{h}^t, \mathbf{x}^t)$ as follows:
+\begin{enumerate}
+    \item message
+    \begin{align*}
+      \mathbf{m}_{ij}^\mathbf{h} &= \phi_\mathbf{h}(\mathbf{h}_i, \mathbf{h}_j, d_{ij}^2) \\
+      \mathbf{m}_{ij}^\mathbf{x}& = \frac{\mathbf{x}_i - \mathbf{x}_j}{d_{ij}+1} \phi_\mathbf{x}(\mathbf{h}_i, \mathbf{h}_j, d_{ij}^2)
+    \end{align*}
+    \item aggregation
+    \begin{align*}
+      \mathbf{m}_i^\mathbf{h} &= \sum_{j\in\mathcal{N}(i)} \phi_\text{attention}(\mathbf{m}_{ij}) \mathbf{m}_{ij}^\mathbf{h} \\
+      \mathbf{m}_i^\mathbf{x} &= \sum_{j\in\mathcal{N}(i)} \mathbf{m}_{ij}^\mathbf{x}
+    \end{align*}
+    \item update
+    \begin{align*}
+      \mathbf{h}_i^{t+1} &= \phi_\text{update}(\mathbf{h}_i^t, \mathbf{m}_i^\mathbf{h}) \\
+      \mathbf{x}_i^{t+1} &= \mathbf{x}_i^t + \mathbf{m}_i^\mathbf{x}
+    \end{align*}
+\end{enumerate}
+
+All the functions $\phi_\bullet$ are fully connected neural networks following the same architecture as in the original paper.
+Both layers are trivially permutation equivariant. Besides, one can easily show that the EGCL is E(3)-equivariant 
+i.e. $\mathbf{h}^t, R\mathbf{x}^t + \mathbf{t} = \text{EGCL}(\mathbf{h}^t, R\mathbf{x}^t + \mathbf{t})$ 
+for all orthogonal matrix $R\in O(3)$ and translation vector $\mathbf{t} \in \mathbb{R}^3$.
+
+Since our GNNs have stacked permutation-equivariant layers and then a permutation-invariant global mean pooling, they are permutation-invariant.
+Likewise, since the EGCL is E(3)-equivariant and the global mean pooling is permutation-invariant, the E3EGNN is E(3)-invariant.
+
+
 \subsection{Models}
-we compare
+
+Taking inspiration from \cite{gnn-101}, we consider the following models:
+\begin{itemize}
+    \item MPNN: a Message Passing Neural Network (MPNN) built with stacked Graph Convolutional Layers (GCL)
+    \item EGNN: an E(3)-equivariant GNN built with stacked E(3)-Equivariant Graph Convolutional Layers (EGCL)
+    \item EGNN\_edge: same architecture as EGNN but using the edge features $\mathcal{E}_\text{type}$ as well when computing the messages
+\end{itemize}
+All models have $L=4$ layers and $d_\text{embed}=11$ (i.e. the same as the input dimension).
+We also consider LinReg, a linear regression model (projects each atom to a scalar and sums them up to get the final prediction), for baseline comparison with the geometric models.
+We expect poor performance as it doesn't leverage the graph structure of the molecules.
+
+\begin{table}[h!]
+\centering
+\resizebox{0.5\textwidth}{!}{ % Resize the table to fit the text width
+\begin{tabular}{|l|l|l|l|l|} \hline
+\textbf{Model} & \textbf{Perm-Eq Layers} & \textbf{Perm-Inv} & \textbf{E(3)-Eq Layer} & \textbf{E(3)-Inv} \\ \hline
+MPNN            & Yes                     & No                 & No                     & Yes                \\ \hline
+EGNN            & Yes                     & Yes                & Yes                     & Yes                \\ \hline
+EGNN\_edge      & Yes                     & Yes                & Yes                     & Yes                \\ \hline
+LinReg          & Yes                     & No                 & No                     & Yes                \\ \hline
+\end{tabular}
+}
+\caption{Symmetry Properties of the Different Models}
+\end{table}
 
 \subsection{Results}
+\subsubsection{Implementation details}
+\begin{itemize}
+    \item We use PyTorch Geometric to handle the graph data
+    \item We use the Adam optimizer with a learning rate of $10^{-3}$ and a batch size of 64
+    \item We use the ReduceLROnPlateau scheduler with a patience of 10 epochs, a factor of 0.9, and a minimum learning rate of $10^{-5}$
+    \item We train each model for 500 epochs
+    \item We use the mean squared error as the loss function
+    \item We keep track of the learning rate, training loss and validation loss using WandB
+    \item We train locally on CPU for simplicity. Each run is about 20 minutes on i7 with 8 cores.
+
+\subsection{Plots}
+
 
 \subsection{Comments}
 
