@@ -14,9 +14,9 @@ def main():
     parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate for the optimizer.")
     parser.add_argument("--use_wandb", action='store_true', help="Use Weights & Biases for logging.")
     parser.add_argument("--qm9_dir", type=str, default="datasets/", help="Path to the QM9 dataset.")
-    parser.add_argument("--weights_dir", type=str, default="weights/", help="Path to save the model weights.")
+    parser.add_argument("--ckpt_dir", type=str, default="ckpt/", help="Path to save the model weights.")
     parser.add_argument("--use_scheduler", action='store_true', help="Use cosine annealing scheduler for learning rate.")
-    parser.add_argument("--ckpt_path", type=str, default=None, help="Path to load model checkpoint.")
+    parser.add_argument("--ckpt_path", type=str, default=None, help="Path to load model checkpoint if retraining.")
 
     args = parser.parse_args()
 
@@ -50,9 +50,9 @@ def main():
     run_experiment(model, train, val, device, starting_epoch, args.epochs, optimizer, args.use_wandb, args.use_scheduler)
     # save model weights
     name = wandb.run.name
-    ckpt_path = args.weights_dir + name + '.pt'
+    ckpt_path = args.ckpt_dir + name + '.pt'
     torch.save({
-        'epoch': args.epochs,
+        'epoch': args.epochs + starting_epoch,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
     }, ckpt_path)
