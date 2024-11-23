@@ -14,8 +14,8 @@ def main():
     parser.add_argument("--use_wandb", action='store_true', help="Use Weights & Biases for logging.")
     parser.add_argument("--qm9_dir", type=str, default="datasets/", help="Path to the QM9 dataset.")
     parser.add_argument("--weights_dir", type=str, default="weights/", help="Path to save the model weights.")
-    parser.add_argument("--use_cosine_scheduler", action='store_true', help="Use cosine annealing scheduler for learning rate.")
-
+    parser.add_argument("--use_scheduler", action='store_true', help="Use cosine annealing scheduler for learning rate.")
+    parser.add_argument("--weights_path", type=str, default=None, help="Path to load model weights.")
 
     args = parser.parse_args()
 
@@ -34,9 +34,12 @@ def main():
     else:
         raise ValueError(f"Invalid model argument: {args.model}")
 
+    if args.weights_path is not None:
+        model.load_state_dict(torch.load(args.weights_path))
+
     # train model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    run_experiment(model, train, val, device, args.epochs, args.lr, args.use_wandb, args.use_cosine_scheduler)
+    run_experiment(model, train, val, device, args.epochs, args.lr, args.use_wandb, args.use_scheduler)
     # save model weights
     description = f'{args.model}_epochs_{args.epochs}_lr_{args.lr}+{"cosine" if args.use_cosine_scheduler else ""}'
     weights_path = args.weights_dir + description + '.pt'

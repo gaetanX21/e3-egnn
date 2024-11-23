@@ -9,7 +9,8 @@ def train_model(model, train_loader, val_loader, optimizer, device, epochs, sche
     model.train()
     train_losses, val_losses = [], []
     for epoch in tqdm(range(epochs)):
-        lr = scheduler.optimizer.param_groups[0]['lr']
+        if scheduler is not None:
+            lr = scheduler.optimizer.param_groups[0]['lr']
         total_loss = 0
         for data in train_loader:
             data = data.to(device)
@@ -21,7 +22,8 @@ def train_model(model, train_loader, val_loader, optimizer, device, epochs, sche
             total_loss += loss.item()
         train_loss = total_loss / len(train_loader)
         val_loss = evaluate_model(model, val_loader, device)
-        scheduler.step(val_loss)
+        if scheduler is not None:
+            scheduler.step(val_loss)
         train_losses.append(train_loss)
         val_losses.append(val_loss)
         if use_wandb:
@@ -42,7 +44,7 @@ def evaluate_model(model, loader, device):
     return loss
 
 
-def run_experiment(model, train_loader, val_loader, device, n_epochs, lr=1e-3, use_wandb=False, use_cosine_scheduler=False):
+def run_experiment(model, train_loader, val_loader, device, n_epochs, lr=1e-3, use_wandb=False, use_scheduler=False):
     """
     Run a training experiment for a given model.
     """
@@ -56,10 +58,10 @@ def run_experiment(model, train_loader, val_loader, device, n_epochs, lr=1e-3, u
     model = model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    if use_cosine_scheduler:
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=100, eta_min=1e-5)
-    else:
+    if use_scheduler:
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.9, patience=5, min_lr=1e-5)
+    else:
+        scheduler = None
     
     if use_wandb:
         wandb.init(
