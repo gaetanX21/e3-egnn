@@ -14,6 +14,8 @@ def main():
     parser.add_argument("--use_wandb", action='store_true', help="Use Weights & Biases for logging.")
     parser.add_argument("--qm9_dir", type=str, default="datasets/", help="Path to the QM9 dataset.")
     parser.add_argument("--weights_dir", type=str, default="weights/", help="Path to save the model weights.")
+    parser.add_argument("--use_cosine_scheduler", action='store_true', help="Use cosine annealing scheduler for learning rate.")
+
 
     args = parser.parse_args()
 
@@ -34,9 +36,9 @@ def main():
 
     # train model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    run_experiment(model, train, val, device, args.epochs, args.lr, args.use_wandb)
+    run_experiment(model, train, val, device, args.epochs, args.lr, args.use_wandb, args.use_cosine_scheduler)
     # save model weights
-    description = f'{args.model}_epochs_{args.epochs}_lr_{args.lr}'
+    description = f'{args.model}_epochs_{args.epochs}_lr_{args.lr}+{"cosine" if args.use_cosine_scheduler else ""}'
     weights_path = args.weights_dir + description + '.pt'
     torch.save(model.state_dict(), weights_path)
     print(f"Model weights saved to {weights_path}")

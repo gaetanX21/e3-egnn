@@ -42,7 +42,7 @@ def evaluate_model(model, loader, device):
     return loss
 
 
-def run_experiment(model, train_loader, val_loader, device, n_epochs, lr=1e-3, use_wandb=False):
+def run_experiment(model, train_loader, val_loader, device, n_epochs, lr=1e-3, use_wandb=False, use_cosine_scheduler=False):
     """
     Run a training experiment for a given model.
     """
@@ -56,7 +56,10 @@ def run_experiment(model, train_loader, val_loader, device, n_epochs, lr=1e-3, u
     model = model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.9, patience=5, min_lr=1e-5)
+    if use_cosine_scheduler:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=100, eta_min=1e-5)
+    else:
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.9, patience=5, min_lr=1e-5)
     
     if use_wandb:
         wandb.init(
