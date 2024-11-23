@@ -4,4 +4,3 @@ src/wandb/
 wandb/
 *.ipynb
 *.pyc
-*.tex

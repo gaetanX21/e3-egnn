@@ -1,0 +1,156 @@
+\documentclass[sigconf]{acmart}
+\begin{document}
+
+\title{Equivariant Diffusion for Molecule Generation in 3D}
+
+\author{Gaëtan Ecrepont}
+\email{gaetan.ecrepont@polytechnique.edu}
+\affiliation{%
+  \institution{Ecole Polytechnique}
+  \city{Paris}
+  \country{France}
+}
+
+\author{Samson Gourevitch}
+\email{samson.gourevitch@polytechnique.edu}
+\affiliation{%
+  \institution{Ecole Polytechnique}
+  \city{Paris}
+  \country{France}
+}
+
+\author{Samuel Safarti}
+\email{samuel.safarti@esade.edu}
+\affiliation{%
+  \institution{ESADE}
+  \city{Paris}
+  \country{France}
+}
+
+\begin{abstract}
+  mettre notre abstract ici
+\end{abstract}
+
+
+\keywords{molecule generation, equivariant network, diffusion models, graph neural networks}
+
+
+\begin{teaserfigure}
+  \includegraphics[width=\textwidth]{figures/overview_diffusion.pdf}
+  \caption{Overview of the Equivariant Diffusion Model}
+  \Description{Overview of the Equivariant Diffusion Model}
+  \label{fig:teaser}
+\end{teaserfigure}
+
+\received{4 December 2024}
+
+\maketitle
+
+\section{Introduction} %% 1) Context
+\subsection{Molecule Generation in 3D}
+enjeux globaux; ce qu'on sait faire / ne sait pas faire
+\subsection{Existing approaches}
+méthodes déjà existantes (e.g. Normalizing Flows, Autoregressive models, etc.): les présenter brièvement et les comparer
+\subsection{Proposed approach}
+expliquer brièvement (sans rentrer dans les détails) la méthode proposée et ses avantages/inconvénients par rapport aux autres approches
+
+
+\section{EDM: E(3) Equivariant Diffusion Model} %% 2) Main content
+\subsection{Diffusion}
+Diffusion models are a class of generative models that operate by iteratively denoising a noised signal.
+In essence, diffusion models define a (forward) noising process which diffuses the complex target distribution $p_\text{data}(\mathbf{x})$ into a simple distribution we know how to sample, usually a Gaussian distribution.
+The training consists in learning the reverse process, usually by leveraging neural networks which given the noisy signal at step $t$ predict the noise increment so that we can recover the original signal at step $t-1$.
+Once the reverse process is learned, one can sample from the target distribution by starting from the simple distribution $\mathbf{x}_T \sim \mathcal{N}(0, I)$ and iteratively denoising it $T$ times to get a sample from the target distribution $\mathbf{x}_0 \sim p_\text{data}(\mathbf{x})$.
+
+Diffusion models were first introduced in the context of image generation by \cite{ddpm} but they can also be applied to generate other modalities such as molecules.
+One simple approach to do so is to represent the molecule as a vector $\left[ \mathbf{x}, \mathbf{h} \right]$ where $\mathbf{x} \in (\mathbb{R}^3)^M$ is the position of the atoms in 3D space and $\mathbf{h} \in (\mathbb{R}^\text{nf})^M$ is the atom features.
+Here $M$ is the number of atoms in the molecule and $\text{nf}$ is the number of features used to embed the atoms.
+In the paper, the atom features are the atom type (H, C, O, N, F one-hot encoded in a 5-dimensional vector) and charge (integer) such that $\text{nf} = 6$.
+
+It makes sense to treat differently the atom positions $\mathbf{x}$ and the atom features $\mathbf{h}$ since the former live in $\mathbb{R}^3$ and are subject to the symmetries of the Euclidean group $E(3)$ while the latter live in $\mathbb{R}^\text{nf}$ and are not subject to these symmetries.
+For this reason, the latent space distingues between the atom positions and the atom features by representing the molecule as a vector concatenation $\left[ \mathbf{z}^{(x)}_t, \mathbf{z}^{(h)}_t \right]$.
+However, the two vectors do interact in the reverse diffusion process i.e. there is only one diffusion process for the whole molecule.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.25\textwidth]{figures/diffusion.png}
+    \caption{The diffusion process of the molecule $\left[ \mathbf{x}, \mathbf{h} \right]$ in the latent space $\left[ \mathbf{z}^{(x)}, \mathbf{z}^{(h)} \right]$.}
+    \label{fig:diffusion}
+\end{figure}
+
+\subsection{Graph Neural Networks}
+Graph Neural Networks (GNNs) are a class of neural networks that operate on graph-structured data.
+They are designed to capture the structure of the graph and the interactions between its nodes.
+More precisely, a GNN is an optimizable transformation on all attributes of the graph (nodes, edges, and global attributes) 
+that preserves graph symmetries. (permutation invariance) \cite{gentle-intro-GNN}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.25\textwidth]{figures/message_passing.png}
+    \caption{The message passing scheme of a GNN.}
+    \label{fig:message-passing}
+\end{figure}
+
+\subsection{Equivariance, Invariance, and the E(3) group}
+Equivariance is a form of symmetry for functions. Roughly speaking, a function is equivariant to a group of transformations $G$ 
+if and only if $\forall T\in G, f(T(x)) = T(f(x))$.
+Likewise, invariance is when the function is constant under the action of the group i.e. $\forall T\in G, f(T(x)) = f(x)$.
+In the context of molecule generation, we are interested in the spatial symmetries of the molecules. Indeed, only the relative positions of the atoms matter, not their absolute positions.
+Therefore, we would want our generative model's final output to be invariant to the Euclidean group $E(3)$, which is the group of translations, rotations and reflections in 3D space.
+Likewise, since we use diffusion to gradually denoise the molecule, we would want the denoising process to be equivariant to $E(3)$.
+This inductive bias is expected to help the model learn the spatial structure of the molecules more efficiently i.e. the model will be able to generalize better and with less training data.
+
+\subsection{E(3) Equivariant GNN}
+In their paper, \cite{edm} propose a GNN architecture that is equivariant to the Euclidean group $E(3)$. To do so, they first define an Equivariant 
+Graph Convolutional Layer (EGCL) that is equivariant to the Euclidean group $E(3)$. This layer is then stacked to form the Equivariant Graph Neural Network (EGNN).
+
+The EGCL computes $\mathbf{x}^{t+1}, \mathbf{h}^{t+1} = \text{EGCL}(\mathbf{x}^t, \mathbf{h}^t)$ as follows:
+\begin{gather}
+    \mathbf{m}_{ij} = \phi_e(\mathbf(h)_i^t, \mathbf{h}_j^t, d_{ij}^2), \quad \tilde{e}_{ij} = \phi_{inf}(\mathbf{m}_{ij}) \\
+    \mathbf{h}_i^{t+1} = \phi_h(\mathbf{h}_i^t, \sum_{j\neq i} \tilde{e}_{ij} \mathbf{m}_{ij}) \\
+    x_i^{t+1} = x_i^t + \sum_{j\neq i} \frac{x_i^t - x_j^t}{d_{ij}+1} \phi_x(\mathbf{h}_i^t, \mathbf{h}_j^t, d_{ij}^2, a_{ij})
+\end{gather}
+where $\phi_e, \phi_{inf}, \phi_h, \phi_x$ are neural networks and $d_{ij}$ is the Euclidean distance between atoms $i$ and $j$.
+Note that $\tilde{e}_{ij}$ implements an attention mechanism for the aggregation of the messages $\mathbf{m}_{ij}$.
+Importantly, the EGCL is equivariant to actions the Euclidean group $E(3)$ on the atom positions $\mathbf{x}$ since replacing $\mathbf{x}_i^t$ by $R\mathbf{x}_i^t + t$ for any $R\in SO(3)$ and $t\in \mathbb{R}^3$ results in the same transformation on $\mathbf{x}_i^{t+1}$.
+Besides, on can easily show by induction that the EGNN is also equivariant to $E(3)$ since it is a stack of EGCLs.
+
+\subsection{Wrapping it together}
+Finally, the Equivariant Diffusion Model (EDM) is obtained by combining the diffusion model and the EGNN.
+The training objective is $\mathbb{E}_{t, \epsilon_t}[||\epsilon_t - \hat{\epsilon}_t||^2]$ where $\hat{\epsilon}_t$ i.e. we want to predict the noise.
+We use the EGNN to predict the noise increment $\hat{\epsilon}_t$ given the noisy molecule $\left[ \mathbf{x}_t, \mathbf{h}_t \right]$ nad the time step $t$.
+To be precise, we set $\hat{\epsilon}_t = \left[ \hat{\epsilon}_t^{(x)}, \hat{\epsilon}_t^{(h)} \right] 
+= \text{EGNN}(\mathbf{z}_t^{(x)}, \mathbf{z}_t^{(h)}) - \left[ \mathbf{z}_t^{(x)}, \mathbf{0} \right]$. This recentering trick is necessary for translational equivariance of the EGNN. More details can be found in the original paper \cite{edm}.
+Once the EGNN is trained, we can sample from the target distribution by starting from the simple distribution $\mathbf{z}_T \sim \mathcal{N}(0, I)$ and iteratively denoising it $T$ times to get $\mathbf{z}_0$.
+We must then decode $\mathbf{z}_0 = \left[ \mathbf{z}_0^{(x)}, \mathbf{z}_0^{(h)} \right]$ to get the molecule $\left[ \mathbf{x}_0, \mathbf{h}_0 \right]$. Doing so is non-trivial since we have continuous (positions), categorical (atom type) and ordinal (charge) variables.
+In the paper, the authors use Bayes rule and some approximations to decode $\mathbf{z}_0$.
+\begin{itemize}
+    \item The atom positions $\mathbf{x}_0$ are obtained by sampling from a gaussian distribution centered around $\mathbf{z}_0^{(x)}$ (plus a correction term)
+    \item The atom type is obtained by sampling from a categorical distribution which essentially amounts to taking the nearest one-hot encoded vector to $(\mathbf{z}_0^{(h)})_{1:5}$
+    \item The charge is obtained by sampling from a gaussian distribution centered around $(\mathbf{z}_0^{(h)})_6$ which essentially amounts to taking the nearest integer to $(\mathbf{z}_0^{(h)})_6$
+\end{itemize}
+In addition, the authors use a heuristic distance-based method to create the edges of the molecule. That is, for each pair of atoms $i$ and $j$, they compute the distance $d_{ij}$ 
+and based on that distance and a table of bond lengths for these atoms they decide whether there is a bond between $i$ and $j$ and if so what type of bond it is.
+
+Finally, note that since the initial distribution $\mathbf{z}_T \sim \mathcal{N}(0, I)$ is E(3)-invariant
+\footnote{Note that no nonzero distribution can be translation invariant, since it wouldn't integrate to one. 
+However, one can use distributions on the linear subspace of $(\mathbb{R}^3)^M$ such that the sum $\sum_i \mathbf{x}_i = \mathbf{0}$ i.e. the center of mass of the molecule is at the origin.
+Xu et al \cite{xu} showed that such a linear subspace can be used consistently for diffusion.}
+and the EGNN is E(3)-equivariant, the final distribution of the model is also E(3)-invariant. (this can be shown easily by induction)
+
+\section{Limitations and extensions} %% 3) Limites et extensions
+\subsection{Evaluation Metrics}
+critiquer novelty on QM9 / molecule stability on GEOM / NLL on both / Wasserstein distance on histograms
+\subsection{E(3) vs. SE(3) equivariance}
+expliquer pourqoi SE(3) pourrait être mieux/moins bien + voir ce qui a été fait dans la littérature
+\subsection{Adding the edges to the models}
+justifier la pertinence/les difficultés d'une intégration des edge types (none, simple, double, triple bond) dans la diffusion latente --> c'est a priori mieux que l'heuristique distance-based pour créer des liaisons à la fin? Voir littérature!
+\subsection{Choice of M}
+Critiquer le fait qu'il faille fixer M pour générer! Peut-on faire autrement? (maybe not?)
+
+
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{biblio}
+
+\end{document}
