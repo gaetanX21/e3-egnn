@@ -3,6 +3,7 @@ from train_eval import run_experiment
 from data import load_qm9, split
 import argparse
 import torch
+import wandb
 
 
 def main():
@@ -15,7 +16,7 @@ def main():
     parser.add_argument("--qm9_dir", type=str, default="datasets/", help="Path to the QM9 dataset.")
     parser.add_argument("--weights_dir", type=str, default="weights/", help="Path to save the model weights.")
     parser.add_argument("--use_scheduler", action='store_true', help="Use cosine annealing scheduler for learning rate.")
-    parser.add_argument("--weights_path", type=str, default=None, help="Path to load model weights.")
+    parser.add_argument("--ckpt_path", type=str, default=None, help="Path to load model checkpoint.")
 
     args = parser.parse_args()
 
@@ -34,17 +35,28 @@ def main():
     else:
         raise ValueError(f"Invalid model argument: {args.model}")
 
-    if args.weights_path is not None:
-        model.load_state_dict(torch.load(args.weights_path))
+    starting_epoch = 0
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    # load model checkpoint
+    if args.ckpt_path is not None:
+        ckpt = torch.load(args.ckpt_path)
+        model.load_state_dict(ckpt['model_state_dict'])
+        starting_epoch = ckpt['epoch']
+        optimizer.load_state_dict(ckpt['optimizer_state_dict'])
+        print(f"Model checkpoint loaded from {args.ckpt_path}")
 
     # train model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    run_experiment(model, train, val, device, args.epochs, args.lr, args.use_wandb, args.use_scheduler)
+    run_experiment(model, train, val, device, starting_epoch, args.epochs, optimizer, args.use_wandb, args.use_scheduler)
     # save model weights
-    description = f'{args.model}_epochs_{args.epochs}_lr_{args.lr}+{"cosine" if args.use_cosine_scheduler else ""}'
-    weights_path = args.weights_dir + description + '.pt'
-    torch.save(model.state_dict(), weights_path)
-    print(f"Model weights saved to {weights_path}")
+    name = wandb.run.name
+    ckpt_path = args.weights_dir + name + '.pt'
+    torch.save({
+        'epoch': args.epochs,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+    }, ckpt_path)
+    print(f"Model weights saved to {ckpt_path}")
 
 
 if __name__ == "__main__":

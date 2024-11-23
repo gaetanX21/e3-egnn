@@ -10,7 +10,7 @@ def main():
 
     parser.add_argument("--model", type=str, default="E3EGNN_edge", help="Model to train. Options: MPNN, E3EGNN, E3EGNN_edge.")
     parser.add_argument("--qm9_dir", type=str, default="datasets/", help="Path to the QM9 dataset.")
-    parser.add_argument("--weights_path", type=str, help="Path to load the model weights.")
+    parser.add_argument("--ckpt_path", type=str, help="Path to load the model checkpoint.")
 
     args = parser.parse_args()
 

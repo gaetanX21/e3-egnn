@@ -1,5 +1,5 @@
 datasets/
-weights/
+ckpt/
 src/wandb/
 wandb/
 *.ipynb

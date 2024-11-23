@@ -11,6 +11,8 @@ def train_model(model, train_loader, val_loader, optimizer, device, epochs, sche
     for epoch in tqdm(range(epochs)):
         if scheduler is not None:
             lr = scheduler.optimizer.param_groups[0]['lr']
+        else:
+            lr = optimizer.param_groups[0]['lr']
         total_loss = 0
         for data in train_loader:
             data = data.to(device)
@@ -44,11 +46,12 @@ def evaluate_model(model, loader, device):
     return loss
 
 
-def run_experiment(model, train_loader, val_loader, device, n_epochs, lr=1e-3, use_wandb=False, use_scheduler=False):
+def run_experiment(model, train_loader, val_loader, device, starting_epoch, n_epochs, optimizer, use_wandb=False, use_scheduler=False):
     """
     Run a training experiment for a given model.
     """
-    print(f"Running experiment for {model.__class__.__name__}, training on {len(train_loader.dataset)} samples for {n_epochs} epochs.")
+    print(f"Running experiment for {model.__class__.__name__}, training on {len(train_loader.dataset)} samples \
+          starting from epoch {starting_epoch} and for {n_epochs} epochs.")
     print("\nModel architecture:")
     print(model)
     total_param = 0
@@ -57,7 +60,6 @@ def run_experiment(model, train_loader, val_loader, device, n_epochs, lr=1e-3, u
     print(f'Total parameters: {total_param}')
     model = model.to(device)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     if use_scheduler:
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.9, patience=5, min_lr=1e-5)
     else:
@@ -68,7 +70,9 @@ def run_experiment(model, train_loader, val_loader, device, n_epochs, lr=1e-3, u
             project = 'egnn',
             config = {
                 'model': model.__class__.__name__,
-                'lr': lr,
+                'lr': optimizer.param_groups[0]['lr'],
+                'scheduler': use_scheduler,
+                'starting_epoch': starting_epoch,
                 'n_epochs': n_epochs,
                 'total_param': total_param
             }
