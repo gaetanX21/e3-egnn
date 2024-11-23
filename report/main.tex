@@ -4,6 +4,7 @@
 \settopmatter{printacmref=false, printccs=false, printfolios=false} % Suppress ACM references
 \renewcommand\footnotetextcopyrightpermission[1]{} % Remove copyright
 \pagestyle{plain} % Plain header and footer
+\usepackage{amsmath}
 
 % Remove conference information
 \acmConference{}{}{} % Clears conference name, location, and date
@@ -169,6 +170,7 @@ We first present the dataset used and then the models considered. We then disxpl
 The paper considers two molecule datasets: QM9 and GEOM. We will stick with QM9 at it is simpler (smaller molecules). Since QM9 has over 100,000 molecules, we filter to keep only molecules with 12 atoms or less. This brings us down to 4005 molecules.
 Each sample in the dataset is a graph with several properties:
 \begin{itemize}
+    \item number of atoms $M$
     \item atom positions $\mathbf{x} \in (\mathbb{R}^3)^M$
     \item atom features $\mathbf{h} \in (\mathbb{R}^\text{nf})^M$ where $\text{nf} = 11$
     \begin{itemize}
@@ -177,11 +179,13 @@ Each sample in the dataset is a graph with several properties:
         \item 7: aromaticity (binary)
         \item 8-10: electron orbital hybridization (one-hot: sp, sp2, sp3)
         \item 11: number of hydrogens
-    \item graph edges (bonds) $\mathcal{E} \in \mathbb{R}^{2\times\text{num_edges}}$
-    \item edge features $\mathcal{E}_\text{type} \in \mathbb{R}^{\text{num_edges}\times 4}$ (one-hot: single, double, triple, aromatic)
+    \end{itemize}
+    \item graph edges (bonds) $\mathcal{E} \in \mathbb{R}^{2\times\text{\#edges}}$
+    \item edge features $\mathcal{E}_\text{type} \in \mathbb{R}^{\text{\#edges}\times 4}$ (one-hot: single, double, triple, aromatic)
 \end{itemize}
 
 \subsection{Models}
+we compare
 
 \subsection{Results}
 

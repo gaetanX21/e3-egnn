@@ -1,4 +1,4 @@
-from models import MPNN, E3EGNN, E3EGNN_edge
+from models import MPNN, E3EGNN, E3EGNN_edge, LinReg
 from train_eval import run_experiment
 from data import load_qm9, split
 import argparse
@@ -32,6 +32,8 @@ def main():
         model = E3EGNN()
     elif args.model == "E3EGNN_edge":
         model = E3EGNN_edge()
+    elif args.model == "LinReg":
+        model = LinReg()
     else:
         raise ValueError(f"Invalid model argument: {args.model}")
 
