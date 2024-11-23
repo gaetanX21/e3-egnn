@@ -268,8 +268,7 @@ LinReg          & Yes                     & No                 & No             
 \caption{Symmetry Properties of the Different Models}
 \end{table}
 
-\subsection{Results}
-\subsubsection{Implementation details}
+\subsection{Implementation details}
 \begin{itemize}
     \item We use PyTorch Geometric to handle the graph data
     \item We use the Adam optimizer with a learning rate of $10^{-3}$ and a batch size of 64
@@ -278,15 +277,40 @@ LinReg          & Yes                     & No                 & No             
     \item We use the mean squared error as the loss function
     \item We keep track of the learning rate, training loss and validation loss using WandB
     \item We train locally on CPU for simplicity. Each run is about 20 minutes on i7 with 8 cores.
+\end{itemize}
 
-\subsection{Plots}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.42\textwidth]{figures/train_loss.png}
+    \caption{Training loss. The LinReg model cannot even overfit the training data, illustrating the superiority of a graph-based approach.}
+    \label{fig:training-loss}
+\end{figure}
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.42\textwidth]{figures/validation_loss.png}
+    \caption{Validation loss. As expected, the EGNN models significantly outperform the MPNN model. In addition, the EGNN model lags behind the EGNN\_edge model, suggesting that incorporating edge features is beneficial.}
+    \label{fig:validation-loss}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.42\textwidth]{figures/learning_rate.png}
+    \caption{Learning Rate. All models have converged to a local minimum after 500 epochs, except the EGNN which is almost there.}
+    \label{fig:learning-rate}
+\end{figure}
 
 \subsection{Comments}
+The results are reported on three figures: the training loss, the validation loss, and the learning rate.
 
-placer le mot "inductive bias"
-+
-comparer MPNN vs. E3EGNN vs. E3EGNN edges
+To begin with, the LinReg model performs very poorly as expected. Unlike its geometric counterparts, it cannot leverage the graph structure of the molecules and thus fails to learn anything meaningful.
+
+Then, MPNN and EGNN\_edge have similar training losses but EGNN\_edge drastically outperforms MPNN on the validation set. This gap shows that EGNN\_edge's inductive bias helps it generalize better than MPNN.
+
+Finally, EGNN is also significantly better than MPNN but learn much slower than EGNN\_edge. This suggests that incorporating edge features is beneficial for the model's performance.
+Nonetheless, edge features can intuitively be inferred from the atom positions and types (using a distance-based heuristic like in the original paper), so the improvement is not as significant as the one brought by E(3)-equivariance.
+That would explain why the EGNN is still learning and could potentially be as good as EGNN\_edge with more training.
+
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{biblio}
