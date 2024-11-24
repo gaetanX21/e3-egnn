@@ -8,7 +8,6 @@ from rdkit import Chem
 import numpy as np
 
 
-DATALOADER_BATCH_SIZE = 64
 MAX_ATOMS = 12
 
 class RemoveFields(object):
@@ -65,7 +64,7 @@ def load_qm9(filepath="../datasets/"):
     return qm9
 
 
-def split(dataset, train_ratio=0.8):
+def split(dataset, train_ratio=0.8, batch_size=64):
     random_idx = torch.randperm(len(dataset))
     n_train = int(len(dataset) * train_ratio)
     n_temp = len(dataset) - n_train
@@ -73,7 +72,7 @@ def split(dataset, train_ratio=0.8):
     train_dataset = dataset[random_idx[:n_train]]
     val_dataset = dataset[random_idx[n_train:n_train+n_val]]
     test_dataset = dataset[random_idx[n_train+n_val:]]
-    train_loader = DataLoader(train_dataset, batch_size=DATALOADER_BATCH_SIZE, shuffle=False)
-    val_loader = DataLoader(val_dataset, batch_size=DATALOADER_BATCH_SIZE, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=DATALOADER_BATCH_SIZE, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     return train_loader, val_loader, test_loader

@@ -15,14 +15,15 @@ def main():
     parser.add_argument("--use_wandb", action='store_true', help="Use Weights & Biases for logging.")
     parser.add_argument("--qm9_dir", type=str, default="datasets/", help="Path to the QM9 dataset.")
     parser.add_argument("--ckpt_dir", type=str, default="ckpt/", help="Path to save the model weights.")
-    parser.add_argument("--use_scheduler", action='store_true', help="Use cosine annealing scheduler for learning rate.")
+    parser.add_argument("--use_scheduler", action='store_true', help="Use LROnPlateau scheduler.")
     parser.add_argument("--ckpt_path", type=str, default=None, help="Path to load model checkpoint if retraining.")
+    parser.add_argument("--batch_size", type=int, default=64, help="Batch size for training")
 
     args = parser.parse_args()
 
     # load QM9 dataset
     qm9 = load_qm9(args.qm9_dir)
-    train, val, test = split(qm9, train_ratio=0.8)
+    train, val, test = split(qm9, train_ratio=0.8, batch_size=args.batch_size)
 
     # initialize model (with default parameters)
     model = None

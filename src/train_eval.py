@@ -71,6 +71,7 @@ def run_experiment(model, train_loader, val_loader, device, starting_epoch, n_ep
             config = {
                 'model': model.__class__.__name__,
                 'lr': optimizer.param_groups[0]['lr'],
+                'batch_size': train_loader.batch_size,
                 'scheduler': use_scheduler,
                 'starting_epoch': starting_epoch,
                 'n_epochs': n_epochs,
