@@ -17,6 +17,7 @@ def main():
     parser.add_argument("--ckpt_dir", type=str, default="ckpt/", help="Path to save the model weights.")
     parser.add_argument("--use_scheduler", action='store_true', help="Use LROnPlateau scheduler.")
     parser.add_argument("--ckpt_path", type=str, default=None, help="Path to load model checkpoint if retraining.")
+    parser.add_argument("--warm_optimizer", action='store_true', help="Loads the optimizer state from the checkpoint.")
     parser.add_argument("--batch_size", type=int, default=64, help="Batch size for training")
 
     args = parser.parse_args()
@@ -45,7 +46,8 @@ def main():
         ckpt = torch.load(args.ckpt_path)
         model.load_state_dict(ckpt['model_state_dict'])
         starting_epoch = ckpt['epoch']
-        optimizer.load_state_dict(ckpt['optimizer_state_dict'])
+        if args.warm_optimizer:
+            optimizer.load_state_dict(ckpt['optimizer_state_dict'])
         print(f"Model checkpoint loaded from {args.ckpt_path}")
 
     # train model
