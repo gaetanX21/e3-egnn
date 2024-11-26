@@ -48,6 +48,9 @@ def main():
         starting_epoch = ckpt['epoch']
         if args.warm_optimizer:
             optimizer.load_state_dict(ckpt['optimizer_state_dict'])
+            if args.lr: # overwrite the learning rate if provided
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] = args.lr
         print(f"Model checkpoint loaded from {args.ckpt_path}")
 
     # train model
