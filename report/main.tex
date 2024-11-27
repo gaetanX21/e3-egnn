@@ -91,7 +91,7 @@ However, the two vectors do interact in the reverse diffusion process i.e. there
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.25\textwidth]{figures/diffusion.png}
+    \includegraphics[width=0.42\textwidth]{figures/diffusion.png}
     \caption{The diffusion process of the molecule $\left[ \mathbf{x}, \mathbf{h} \right]$ in the latent space $\left[ \mathbf{z}^{(x)}, \mathbf{z}^{(h)} \right]$.}
     \label{fig:diffusion}
 \end{figure}
@@ -104,7 +104,7 @@ that preserves graph symmetries. (permutation invariance) \cite{gentle-intro-GNN
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.25\textwidth]{figures/message_passing.png}
+    \includegraphics[width=0.42\textwidth]{figures/message_passing.png}
     \caption{The message passing scheme of a GNN.}
     \label{fig:message-passing}
 \end{figure}
@@ -156,20 +156,38 @@ However, one can use distributions on the linear subspace of $(\mathbb{R}^3)^M$ 
 Xu et al \cite{xu} showed that such a linear subspace can be used consistently for diffusion.}
 and the EGNN is E(3)-equivariant, the final distribution of the model is also E(3)-invariant. (this can be shown easily by induction)
 
-\section{Limitations and extensions} %% 3) Limites et extensions
+\section{Limitations and extensions}
+% Use ChatGPT to rephrase each paragraph, one by one (it would make it much more readable)
 \subsection{Evaluation Metrics}
-critiquer novelty on QM9 / molecule stability on GEOM / NLL on both / Wasserstein distance on histograms
-\subsection{E(3) vs. SE(3) equivariance}
-expliquer pourqoi SE(3) pourrait être mieux/moins bien + voir ce qui a été fait dans la littérature
-\subsection{Adding the edges to the models}
-justifier la pertinence/les difficultés d'une intégration des edge types (none, simple, double, triple bond) dans la diffusion latente --> c'est a priori mieux que l'heuristique distance-based pour créer des liaisons à la fin? Voir littérature!
-\subsection{Choice of M}
-Critiquer le fait qu'il faille fixer M pour générer! Peut-on faire autrement? (maybe not?)
+Evaluation metrics for generation tasks are never simple and there is no consensus on which one to use in different contexts. We will try to understand and highlight the limitations of the ones used in this paper.
+\subsubsection{Novelty}
+One of the metrics employed to assess the quality of the method is the novelty, meaning the percentage of generated molecules that are not in the dataset. This metric is somewhat misleading especially for the QM9 dataset as, since QM9 is an exhaustive enumeration of all "small" molecules satisfying a set of constraints, any "good" model should have 0 novelty and simply reproduce what it has seen in the dataset \cite{vignac2022topnequivariantsetgraph}. Therefore, this metric doesn't capture well the quality of the molecule generation. However, if it is simply used as a sanity check (which is not very clear here), then it's an interesting metric to see if the model is not producing too many bad molecules.
+\subsubsection{Negative Log Likelihood}
+Similarly, the article uses the Negative Log Likelihood as an evaluation metric. Although this likelihood is crucial as it is the cornerstone on which the model relies to train and reach an optimal value of the parameters, it is not the best metric to evaluate it. Indeed, this metric will reflect how close to the dataset molecule distribution the generated molecules are but will not integrate at all the physical properties or the valid structure of those molecules. Therefore, we could imagine a model that has a low NLL but that still produces bad molecules. In addition, as the authors suggest themselves, the EGNN method has a much lower NLL than previous methods which shows that the model is able to capture sharper peaks in the distribution. While this is not necessarily bad, it could actually be some kind of overfitting and reduce the generalization capability of the model.
+\subsubsection{Stability}
+To address this issue, the authors also evaluate the model using atom and molecule stability of the generated molecules. There remains a significant gap between atom stability (98.7\%) and molecule stability (82.0\%). This indicates that while individual atomic features are well-represented, the interatomic relationships and bond configurations are not always coherent, potentially limiting practical applicability. This gap is not investigated by the authors.
+\subsubsection{QM9 vs GEOM}
+Furthermore, while this article's method seems to outperform the baselines with these metrics, as we already emphasized it might simply be overfitting on the QM9 dataset. GEOM’s broader diversity challenges models to generalize beyond QM9. However, stability scores for GEOM are not provided as thoroughly as for QM9 and the authors brush over this part, which makes it difficult to evaluate EDM's true generalization ability. Instead they use a much more indirect metric (which wasn't used for QM9), the Wasserstein distance between the histogram of energy derived from the produced molecules. Although they show that their method produces a histogram that is closer to the original dataset distribution, it could again simply be overfitting. In addition, there is no clear and simple link between the energy of a generated sample and its validity or stability, which makes this metric very tricky to understand.
+
+\subsection{Potential extensions}
+\subsubsection{E(3) vs. SE(3)}
+The article demonstrate the utility of adding E(3) equivariance to the model as it helps with scalability while respecting fundamental properties of the molecules. However, it seems that a better group of symmetries to consider would be SE(3) as it aligns more closely with some properties that can depend, for instance on the chirality of a molecule. Indeed, in general, molecules are not E(3) equivariant.
+\subsubsection{Incorporating edge features}
+The current evaluation method for molecule validity and stability relies on bond distances and atom valencies, using empirically defined margins around typical bond lengths to assign bond orders (single, double, triple, or none). While effective for small molecules in datasets like QM9 (as the margins were empirically fine-tuned on this dataset), this heuristic approach struggles with larger, more complex datasets like GEOM-Drugs, where atypical bond distances and aromaticity become more prevalent. A more robust alternative could involve incorporating bond type predictions into the diffusion process, leveraging edge features (e.g., bond orders) directly within the model. This would likely outperform distance-based heuristics by aligning the generation process more closely with chemical principles. Prior work on edge-enhanced graph models, such as \cite{gilmer2017neuralmessagepassingquantum}, demonstrates the potential of using edge features to improve molecular representations and downstream tasks. Incorporating such approaches into diffusion models could significantly enhance their performance and generalization. We try incorporating edge information in section 4 and show that it does in fact improve the model for classification.
+% Not sure about this as it seems to be the standard in litterature
+\subsubsection{Number of atoms}
+In addition to edge features, an potential extension could be to incorporate the number of atoms, M into the model, instead of having to sample it separately and then sample from the model using this fixed number of atoms.
+% DEVELOP
+
+\subsection{Limited applicability to drug discovery}
+Finally, although the method proposed in the article seems promising, its applicability to drug discovery seems questionable. The authors have advanced arguments showing good performance in generating small molecules, but its performance on larger or more structurally diverse compounds is not really assessed. For instance in GEOM-drugs, they only show the atom stability (85\%) which is not relevant as we are interested in the molecules. For molecules the stability drops to 2.5\%.
+Additionally, the model is not tested on functional or biological relevance metrics like activity or target binding. 
+% DEVELOP
 
 \section{Experiments on toy model}
 The key contribution of the Hoogeboom's paper is the introduction of E(3)-equivariance in Graph Neural Networks.
 Reproducing the paper's experiment is not computationally feasible for students as training takes about 7 days on GPUs. However, we can study the advantage of E(3)-equivariant GNNs over regular GNNs with simpler experiments. We shift our focus from a generation to a regression class, which is less resource intensive and sufficient to demonstrate the superior performance of equivariant models over vanilla ones.
-We first present the dataset used and then the models considered. We then disxplay our results and discuss them.
+We first present the dataset used and then the models considered. We then display our results and discuss them.
 
 \subsection{Dataset}
 The paper considers two molecule datasets: QM9 and GEOM. We will stick with QM9 at it is simpler (smaller molecules). Since QM9 has over 100,000 molecules, we filter to keep only molecules with 12 atoms or less. This brings us down to 4005 molecules.
