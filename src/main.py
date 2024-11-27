@@ -20,6 +20,7 @@ def main():
     parser.add_argument("--warm_optimizer", action='store_true', help="Loads the optimizer state from the checkpoint.")
     parser.add_argument("--batch_size", type=int, default=64, help="Batch size for training")
 
+
     args = parser.parse_args()
 
     # load QM9 dataset

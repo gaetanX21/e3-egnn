@@ -310,7 +310,7 @@ Then, MPNN and EGNN\_edge have similar training losses but EGNN\_edge drasticall
 Finally, EGNN is also significantly better than MPNN but learn much slower than EGNN\_edge. This suggests that incorporating edge features is beneficial for the model's performance.
 Nonetheless, edge features can intuitively be inferred from the atom positions and types (using a distance-based heuristic like in the original paper), so the improvement is not as significant as the one brought by E(3)-equivariance.
 That would explain why the EGNN is still learning and could potentially be as good as EGNN\_edge with more training. To verify this hypothesis, we trained the model for 1000 epochs, but the validation loss and training loss actually plateau around 500 epochs.
-Perhaps with more layers or a higher embedding dimension, the EGNN could iner the edge types and thus catch up with EGNN\_edge.
+Perhaps with more layers or a higher embedding dimension, the EGNN could infer the edge types and thus catch up with EGNN\_edge.
 
 
 \bibliographystyle{ACM-Reference-Format}
