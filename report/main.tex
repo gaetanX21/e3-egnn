@@ -46,7 +46,7 @@
 }
 
 \begin{abstract}
-  mettre notre abstract ici
+This paper discusses the work of Hoogeboom et. al \cite{edm} on 3D molecule generation using E(3) Equivariant Diffusion Models (EDM). We demonstrate the benefits of incorporating E(3)-equivariance in Graph Neural Networks (GNNs) through a toy model experiment. Additionnally, we highlight the limitations of the paper and propose potential extensions.
 \end{abstract}
 
 
@@ -70,7 +70,9 @@ enjeux globaux; ce qu'on sait faire / ne sait pas faire
 \subsection{Existing approaches}
 méthodes déjà existantes (e.g. Normalizing Flows, Autoregressive models, etc.): les présenter brièvement et les comparer
 \subsection{Proposed approach}
-expliquer brièvement (sans rentrer dans les détails) la méthode proposée et ses avantages/inconvénients par rapport aux autres approches
+expliquer brièvement la méthode proposée et ses avantages/inconvénients par rapport aux autres approches
+
+The paper is organized as follows: Section 2 motivates and defines the E(3) Equivariant Diffusion Model (EDM), Section 3 discusses the limitations and potential extensions of the model and Section 4 presents the results of our experiments on a toy model.
 
 
 \section{EDM: E(3) Equivariant Diffusion Model} %% 2) Main content
@@ -184,13 +186,42 @@ Finally, although the method proposed in the article seems promising, its applic
 Additionally, the model is not tested on functional or biological relevance metrics like activity or target binding. 
 % DEVELOP
 
+\section{Limitations and Extensions}
+\subsection{Evaluation Metrics}
+Evaluation metrics for generation tasks are complex, and no consensus exists on the most appropriate metrics for different contexts. Here, we analyze the metrics used in this paper and highlight their limitations.
+
+\subsubsection{Novelty}
+Novelty, defined as the percentage of generated molecules not present in the training dataset, is one of the metrics employed. However, this metric can be misleading, especially for datasets like QM9, which represent an exhaustive enumeration of all "small" molecules satisfying certain constraints. For QM9, an ideal model should have zero novelty, simply reproducing the dataset molecules. Thus, novelty fails to capture the true quality of molecule generation \cite{vignac2022topnequivariantsetgraph}. If used as a sanity check to ensure the model is not generating entirely invalid molecules (a role that is not explicitly clarified in the paper), it can still provide limited insight. However, it is insufficient as a standalone measure of model performance.
+
+\subsubsection{Negative Log Likelihood (NLL)}
+Negative Log Likelihood (NLL), while central to the model’s training and optimization process, is not ideal for evaluating generation quality. NLL measures the closeness of the generated distribution to the dataset distribution but does not account for physical properties or structural validity. A model could achieve a low NLL while generating chemically invalid molecules. Additionally, the low NLL achieved by the EDM method compared to prior models could indicate sharper peaks in the distribution, as suggested by the authors. While this reflects the model's ability to fit the data, it could also suggest overfitting, reducing generalization capability—a concern that warrants further exploration.
+
+\subsubsection{Stability}
+The authors also evaluate stability metrics, such as atom stability (98.7\%) and molecule stability (82.0\%). The gap between these metrics highlights that while atomic-level features are well-represented, the model struggles to maintain coherent interatomic relationships and bond configurations. This discrepancy is significant but remains unexplored in the paper. Addressing the causes of this gap could provide insights into the limitations of the generative approach.
+
+\subsubsection{QM9 vs. GEOM}
+The authors emphasize strong performance on QM9, but the dataset's constrained diversity may lead to overfitting. In contrast, GEOM datasets, which include more diverse and complex molecules, test a model’s generalization ability. While EDM demonstrates closer histogram distributions for derived energy metrics in GEOM, the stability scores for these molecules are not presented as thoroughly as for QM9. The use of indirect metrics, like the Wasserstein distance of energy histograms, complicates the evaluation. While it shows that EDM aligns with the dataset’s energy distribution, there is no clear connection between this metric and the validity or stability of generated molecules, making the results harder to interpret.
+
+\subsection{Potential Extensions}
+\subsubsection{E(3) vs. SE(3) Equivariance}
+The paper demonstrates that E(3) equivariance improves scalability and preserves molecular symmetries. However, SE(3) equivariance could be more appropriate for certain molecules, particularly those with chiral properties. Chirality, which depends on molecular orientation rather than mere distances, is not well-captured by E(3) equivariance. While the paper does not explore this distinction, extending the framework to SE(3) equivariance could enhance the model’s capability to handle chiral molecules and other properties sensitive to spatial transformations.
+
+\subsubsection{Incorporating Edge Features}
+The current method for assessing bond validity relies on heuristics based on bond distances and valencies, tuned empirically for QM9. While effective for small molecules, this approach struggles with larger, more diverse datasets like GEOM-Drugs, where bond distances and aromaticity vary significantly. A more principled approach would incorporate bond types directly into the diffusion process using edge features, such as bond orders. Graph models leveraging edge features, like \cite{gilmer2017neuralmessagepassingquantum}, have shown that including this information improves molecular representations and downstream predictions. Integrating such features into diffusion models could enhance their alignment with chemical principles and improve stability metrics across datasets.
+
+\subsubsection{Incorporating Atom Counts}
+Another limitation is the reliance on separate sampling of the number of atoms, \(M\), before molecule generation. Integrating \(M\) directly into the model as part of the generative process could improve flexibility and coherence. DEVELOP: Discuss approaches or literature that integrate atom counts into generative frameworks.
+
+\subsection{Limited Applicability to Drug Discovery}
+While the proposed method shows promise in generating small molecules, its applicability to drug discovery remains limited. Performance on structurally diverse or larger molecules is not adequately assessed. For example, in GEOM-Drugs, the atom stability (85\%) remains relatively high, but the molecule stability (2.5\%) is unacceptably low, undermining its practical utility. Additionally, the model’s relevance to functional or biological properties, such as binding affinity or activity, is not evaluated. Incorporating these aspects would provide a more comprehensive understanding of its applicability to drug discovery and other real-world tasks. DEVELOP: Add suggestions for integrating functional relevance metrics into generative evaluations.
+
+
 \section{Experiments on toy model}
-The key contribution of the Hoogeboom's paper is the introduction of E(3)-equivariance in Graph Neural Networks.
-Reproducing the paper's experiment is not computationally feasible for students as training takes about 7 days on GPUs. However, we can study the advantage of E(3)-equivariant GNNs over regular GNNs with simpler experiments. We shift our focus from a generation to a regression class, which is less resource intensive and sufficient to demonstrate the superior performance of equivariant models over vanilla ones.
-We first present the dataset used and then the models considered. We then display our results and discuss them.
+The key contribution of Hoogeboom's paper is the introduction of E(3)-equivariance. Their choice is motivated by the spatial symmetries of molecules. We aim to demonstrate the benefits of incorporating E(3)-equivariance in Graph Neural Networks (GNNs) through a toy model experiment. We will focus on a regression task, which is less computationally intensive and sufficient to highlight the advantages of equivariant models over regular ones. Indeed, reproducing the paper's experiments is not feasible for students, as training takes about 7 days on GPUs. We will first present the dataset and task, then the models considered and implementation details. We will finally present the results of our experiments.
 
 \subsection{Dataset}
-The paper considers two molecule datasets: QM9 and GEOM. We will stick with QM9 at it is simpler (smaller molecules). Since QM9 has over 100,000 molecules, we filter to keep only molecules with 12 atoms or less. This brings us down to 4005 molecules.
+The paper considers two molecule datasets: QM9 and GEOM. We will stick with QM9 for simplcity: it only contains small molecules with atoms in H, C, O, N, F. This allows us to focus on the model's ability to capture the spatial structure of the molecules without being overwhelmed by the complexity of larger molecules.
+Additionnally, since QM9 has over 100,000 molecules, we filter to keep only molecules with 12 atoms or less. This brings us down to 4005 molecules.
 Each sample in the dataset is a graph with several properties:
 \begin{itemize}
     \item number of atoms $M$
@@ -206,7 +237,6 @@ Each sample in the dataset is a graph with several properties:
     \item graph edges (bonds) $\mathcal{E} \in \mathbb{R}^{2\times\text{\#edges}}$
     \item edge features $\mathcal{E}_\text{type} \in \mathbb{R}^{\text{\#edges}\times 4}$ (one-hot: single, double, triple, aromatic)
 \end{itemize}
-
 The QM9 dataset has 19 regression targets which are various physical properties of the molecules.
 We will focus on the first target which is the dipole moment of the molecule. We chose this target because it is typically geometric so we expect to clearly see the benefits of 
 incorporating E(3)-equivariance in the model.
@@ -214,16 +244,15 @@ We adopt a random split of 80\% training, 10\% validation, and 10\% test.
 Finally, we normalize our regression target to have zero mean and unit variance.
 
 \subsection{Layers}
-
 All GNNs considered follow the same architecture:
 \begin{enumerate}
     \item Linear layer to embed the atom features (which include the atom positions for MPNN): $(M,\text{nf}) \rightarrow (M, d_\text{embed})$
-    \item Stacked GCL or EGCL layers (depending on the model) with $L$ layers: $(M, d_\text{embed}) \rightarrow (M, d_\text{embed})$
+    \item Stacked GCL or EGCL layers (depending on the model) with $L$ layers: $(M, d_\text{embed}) \rightarrow (M, d_\text{embed})$ for GLC and $(M, d_\text{embed}+3) \rightarrow (M, d_\text{embed}+3)$ for EGCL
     \item Global mean pooling to aggregate the node features: $(M, d_\text{embed}) \rightarrow (d_\text{embed})$
     \item Linear layer to predict the regression target $(d_\text{embed},) \rightarrow (1,)$
 \end{enumerate}
 
-Let's first describe the two types of layers considered.
+Let us describe the two types of layers considered.
 
 The GCL layer computes $\mathbf{h}^{t+1} = \text{GCL}(\mathbf{h}^t)$ as follows:
 \begin{enumerate}
@@ -252,13 +281,11 @@ The EGCL layer computes $\mathbf{h}^{t+1}, \mathbf{x}^{t+1} = \text{EGCL}(\mathb
 \end{enumerate}
 
 All the functions $\phi_\bullet$ are fully connected neural networks following the same architecture as in the original paper.
-Both layers are trivially permutation equivariant. Besides, one can easily show that the EGCL is E(3)-equivariant 
-i.e. $\mathbf{h}^t, R\mathbf{x}^t + \mathbf{t} = \text{EGCL}(\mathbf{h}^t, R\mathbf{x}^t + \mathbf{t})$ 
-for all orthogonal matrix $R\in O(3)$ and translation vector $\mathbf{t} \in \mathbb{R}^3$.
+Both layers are trivially permutation equivariant i.e. if one permutes the node of the graph, the output of the layer will be permuted in the same way.
+Besides, one can easily show from the equations that the EGCL is E(3)-equivariant i.e. $\mathbf{h}^t, R\mathbf{x}^t + \mathbf{t} = \text{EGCL}(\mathbf{h}^t, R\mathbf{x}^t + \mathbf{t})$ for all orthogonal matrix $R\in O(3)$ and translation vector $\mathbf{t} \in \mathbb{R}^3$.
 
-Since our GNNs have stacked permutation-equivariant layers and then a permutation-invariant global mean pooling, they are permutation-invariant.
-Likewise, since the EGCL is E(3)-equivariant and the global mean pooling is permutation-invariant, the E3EGNN is E(3)-invariant.
-
+Since our GNNs have stacked permutation equivariant layers and then a permutation invariant global mean pooling, they are permutation invariant.
+Likewise, since $\mathbf{h}$ is E(3) invariant through the layers (as it only depends on the atom coordinates through the pairwise distances $d_{ij}$) and the output depends on $\mathbf{h}$ only (and not $\mathbf{x}$) after the layers, the GNNs are E(3) invariant.
 
 \subsection{Models}
 
@@ -288,7 +315,7 @@ LinReg          & Yes                     & No                 & No             
 
 \subsection{Implementation details}
 \begin{itemize}
-    \item We use PyTorch Geometric to handle the graph data
+    \item We use PyTorch Geometric to handle the graph data, with PyTorch as backend
     \item We use the Adam optimizer with a learning rate of $10^{-3}$ and a batch size of 64
     \item We use the ReduceLROnPlateau scheduler with a patience of 10 epochs, a factor of 0.9, and a minimum learning rate of $10^{-5}$
     \item We train each model for 500 epochs
@@ -325,10 +352,9 @@ To begin with, the LinReg model performs very poorly as expected. Unlike its geo
 
 Then, MPNN and EGNN\_edge have similar training losses but EGNN\_edge drastically outperforms MPNN on the validation set. This gap shows that EGNN\_edge's inductive bias helps it generalize better than MPNN.
 
-Finally, EGNN is also significantly better than MPNN but learn much slower than EGNN\_edge. This suggests that incorporating edge features is beneficial for the model's performance.
+Finally, EGNN is also significantly better than MPNN but learn much slower than EGNN\_edge. This suggests that incorporating edge features is beneficial to the model's performance.
 Nonetheless, edge features can intuitively be inferred from the atom positions and types (using a distance-based heuristic like in the original paper), so the improvement is not as significant as the one brought by E(3)-equivariance.
-That would explain why the EGNN is still learning and could potentially be as good as EGNN\_edge with more training. To verify this hypothesis, we trained the model for 1000 epochs, but the validation loss and training loss actually plateau around 500 epochs.
-Perhaps with more layers or a higher embedding dimension, the EGNN could infer the edge types and thus catch up with EGNN\_edge.
+That would explain why the EGNN is still learning and could potentially be as good as EGNN\_edge with more training. To verify this hypothesis, we trained the model for 1000 epochs, but the validation loss and training loss actually plateau around 500 epochs. There could be two reasons for that: either EGNN doesn't have enough capacity to infer the edge types itself (need for more layers or higher embedding dimension) or EGNN got stuck in a local minimum during training.
 
 
 \bibliographystyle{ACM-Reference-Format}
