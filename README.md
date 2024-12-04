@@ -64,21 +64,21 @@ Our pipeline consists of:
 
 2. Set up the Environment
 
-```bash
-conda create -n egnn-env python=3.8
-conda activate egnn-env
-pip install -r requirements.txt
+   ```bash
+   conda create -n egnn-env python=3.8
+   conda activate egnn-env
+   pip install -r requirements.txt
 
 3. Download and Preprocess the QM9 Dataset
 
-```bash
-python preprocess.py
+   ```bash
+   python preprocess.py
 
 ## Usage
 
 1. Train Models
-```bash
-python train.py --model EGNN --epochs 500
+   ```bash
+   python train.py --model EGNN --epochs 500
 
 Options for `--model`
 - `LinReg`
@@ -87,8 +87,8 @@ Options for `--model`
 - `EGNN_edge`
 
 2. Evaluate Models
-```bash
-python evaluate.py --model EGNN
+   ```bash
+   python evaluate.py --model EGNN
 
 3. Visualization
 
