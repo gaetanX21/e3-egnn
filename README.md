@@ -16,7 +16,7 @@ This repository contains the implementation and experiments for exploring E(3)-e
 
 ## Introduction
 
-This project replicates and extends findings from Hoogeboom et al. to illustrate the advantages of E(3)-equivariance in molecular property prediction tasks. Specifically, we:
+This project illustrates findings from Hoogeboom et al. in order to show the advantages of E(3)-equivariance in molecular property prediction tasks. Specifically, we:
 - Use the QM9 dataset for a regression task predicting the molecular dipole moment.
 - Compare standard GNNs with E(3)-equivariant GNNs.
 - Demonstrate the benefits of leveraging geometric structure in molecular data.
@@ -110,19 +110,15 @@ Figures and detailed discussions are in the report.
 
 ## Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome! Especially implementing an SE(3) equivariant model as it should produce better results. Please:
 1. Fork the repository.
 2. Create a new branch (`feature/new-feature`).
 3. Submit a pull request.
 
-## License
-
-This project is licensed under the MIT License.
-
 ## Acknowledgements
 
 - Hoogeboom et al. for their foundational work on E(3)-equivariant GNNs.
-- PyTorch Geometric for their excellent framework for graph data.
+- PyTorch Geometric for their framework for graph data.
 - The QM9 dataset creators.
 
 
