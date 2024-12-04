@@ -11,7 +11,6 @@ This repository contains the implementation and experiments for exploring E(3)-e
 - [Usage](#usage)
 - [Results](#results)
 - [Contributing](#contributing)
-- [License](#license)
 - [Acknowledgements](#acknowledgements)
 
 ## Introduction
