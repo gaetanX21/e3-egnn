@@ -68,11 +68,6 @@ Our pipeline consists of:
    conda activate egnn-env
    pip install -r requirements.txt
 
-3. Download and Preprocess the QM9 Dataset
-
-   ```bash
-   python preprocess.py
-
 ## Usage
 
 1. Train Models
