@@ -61,3 +61,68 @@ Our pipeline consists of:
    ```bash
    git clone https://github.com/your_username/E3-equivariant-GNN.git
    cd E3-equivariant-GNN
+
+2. Set up the Environment
+
+```bash
+conda create -n egnn-env python=3.8
+conda activate egnn-env
+pip install -r requirements.txt
+
+3. Download and Preprocess the QM9 Dataset
+
+```bash
+python preprocess.py
+
+## Usage
+
+1. Train Models
+```bash
+python train.py --model EGNN --epochs 500
+
+Options for `--model`
+- `LinReg`
+- `MPNN`
+- `EGNN`
+- `EGNN_edge`
+
+2. Evaluate Models
+```bash
+python evaluate.py --model EGNN
+
+3. Visualization
+
+Results such as training/validation loss and learning rate are logged in WandB.
+
+## Results
+
+### Training Loss
+- **LinReg**: Performs poorly, while GNNs effectively minimize loss.
+
+### Validation Loss
+- **EGNN-based models**: Outperform MPNNs, with EGNN_edge achieving the best generalization.
+
+### Key Observations
+- **E(3)-equivariance**: Leads to significant performance gains.
+- Incorporating **edge features** improves model expressivity.
+
+Figures and detailed discussions are in the report.
+
+## Contributing
+
+Contributions are welcome! Please:
+1. Fork the repository.
+2. Create a new branch (`feature/new-feature`).
+3. Submit a pull request.
+
+## License
+
+This project is licensed under the MIT License.
+
+## Acknowledgements
+
+- Hoogeboom et al. for their foundational work on E(3)-equivariant GNNs.
+- PyTorch Geometric for their excellent framework for graph data.
+- The QM9 dataset creators.
+
+
