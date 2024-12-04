@@ -59,8 +59,8 @@ Our pipeline consists of:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your_username/E3-equivariant-GNN.git
-   cd E3-equivariant-GNN
+   git clone https://github.com/your_username/EGGN_Classifier.git
+   cd EGGN_Classifier
 
 2. Set up the Environment
 
@@ -78,7 +78,7 @@ Our pipeline consists of:
 
 1. Train Models
    ```bash
-   python train.py --model EGNN --epochs 500
+   python main.py --model EGNN --epochs 500
 
 Options for `--model`
 - `LinReg`
@@ -88,7 +88,7 @@ Options for `--model`
 
 2. Evaluate Models
    ```bash
-   python evaluate.py --model EGNN
+   python eval.py --model EGNN
 
 3. Visualization
 
